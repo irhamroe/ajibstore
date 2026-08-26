@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ajib Store & Ajib.Net - POS Elektronik & Wifi Billing System</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- HTML5 QRCode Scanner CDN -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon-box">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div class="brand-info">
+          <h2>Ajib <span>Store</span></h2>
+          <p><i class="fa-solid fa-wifi"></i> Ajib.Net Provider</p>
+        </div>
+      </div>
+
+      <div class="nav-group">Toko Elektronik</div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-tab="dashboard">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" data-tab="stok-barang">
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <span>Stok Barang</span>
+        </a>
+        <a class="nav-item" data-tab="kasir-pos">
+          <i class="fa-solid fa-cash-register"></i>
+          <span>Kasir POS</span>
+        </a>
+        <a class="nav-item" data-tab="rekap-pos">
+          <i class="fa-solid fa-receipt"></i>
+          <span>Rekap POS</span>
+        </a>
+        <a class="nav-item" data-tab="manajemen-user">
+          <i class="fa-solid fa-users-gear"></i>
+          <span>Manajemen User</span>
+        </a>
+
+        <div class="nav-group" style="margin-top: 10px;">Layanan Ajib.Net</div>
+        <a class="nav-item wifi-active" data-tab="pelanggan-wifi">
+          <i class="fa-solid fa-users-gear"></i>
+          <span>Pelanggan Wifi</span>
+        </a>
+        <a class="nav-item wifi-active" data-tab="bayar-wifi">
+          <i class="fa-solid fa-wallet"></i>
+          <span>Bayar Wifi</span>
+        </a>
+        <a class="nav-item wifi-active" data-tab="rekap-wifi">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          <span>Rekap Wifi</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <p>&copy; 2026 Ajib Store & Ajib.Net v2.5</p>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Top Header Bar -->
+      <header class="top-header">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <button class="mobile-toggle" id="mobileToggle">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="page-title">
+            <h1 id="currentPageTitle">Dashboard Utama</h1>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <div class="clock-widget">
+            <i class="fa-solid fa-clock"></i>
+            <span id="liveClock">00:00:00</span>
+          </div>
+          <div class="user-profile-widget">
+            <div class="user-avatar-circle" id="userAvatarText">A</div>
+            <div class="user-info-text">
+              <span class="user-name" id="userNameText">Administrator</span>
+              <span class="user-role-tag" id="userRoleText">Admin (Full Access)</span>
+            </div>
+            <button class="btn btn-sm btn-secondary btn-icon" id="btnEditProfile" title="Edit Profil / Password" style="margin-left: 6px;">
+              <i class="fa-solid fa-user-gear"></i>
+            </button>
+            <button class="btn btn-sm btn-danger btn-icon" id="btnLogout" title="Keluar / Logout" style="margin-left: 6px;">
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Body Container -->
+      <main class="content-body">
+        
+        <!-- 1. DASHBOARD TAB -->
+        <section class="tab-pane active" id="tab-dashboard">
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-icon"><i class="fa-solid fa-rupiah-sign"></i></div>
+              <div class="stat-details">
+                <h3>Omset POS (Hari Ini)</h3>
+                <div class="stat-value" id="dashTodayPosRevenue">Rp 0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon"><i class="fa-solid fa-basket-shopping"></i></div>
+              <div class="stat-details">
+                <h3>Transaksi POS (Hari Ini)</h3>
+                <div class="stat-value" id="dashTodayPosCount">0 Tx</div>
+              </div>
+            </div>
+            <div class="stat-card stat-wifi">
+              <div class="stat-icon"><i class="fa-solid fa-wifi"></i></div>
+              <div class="stat-details">
+                <h3>Pelanggan Wifi Ajib.Net</h3>
+                <div class="stat-value" id="dashWifiCustomerCount">0 User</div>
+              </div>
+            </div>
+            <div class="stat-card stat-wifi">
+              <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+              <div class="stat-details">
+                <h3>Iuran Wifi (Bulan Ini)</h3>
+                <div class="stat-value" id="dashWifiMonthlyRevenue">Rp 0</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+            <div class="glass-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                <h3><i class="fa-solid fa-chart-area" style="color: #38bdf8;"></i> Grafik Penjualan POS (7 Hari Terakhir)</h3>
+              </div>
+              <div style="position: relative; height: 300px;">
+                <canvas id="dashboardChart"></canvas>
+              </div>
+            </div>
+
+            <div class="glass-card">
+              <h3 style="margin-bottom: 16px;"><i class="fa-solid fa-triangle-exclamation" style="color: #fbbf24;"></i> Peringatan Stok Menipis</h3>
+              <div id="lowStockList" style="display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto;">
+                <!-- Dynamically populated low stock products -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. STOK BARANG TAB -->
+        <section class="tab-pane" id="tab-stok-barang">
+          <div class="glass-card" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+              <div style="display: flex; gap: 12px; flex: 1; max-width: 480px;">
+                <div class="search-input-wrap" style="flex: 1;">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" id="searchProductInput" class="form-control" placeholder="Cari nama barang / barcode...">
+                </div>
+                <select id="filterProductCategory" class="form-control" style="width: 170px;">
+                  <option value="">Semua Kategori</option>
+                  <option value="Aksesori HP & Laptop">Aksesori HP & Laptop</option>
+                  <option value="Jaringan & Wifi">Jaringan & Wifi</option>
+                  <option value="Elektronik Rumah">Elektronik Rumah</option>
+                  <option value="Komponen & Kabel">Komponen & Kabel</option>
+                </select>
+              </div>
+
+              <button class="btn btn-primary" id="btnOpenAddProduct">
+                <i class="fa-solid fa-plus"></i> Tambah Barang Elektronik
+              </button>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div class="table-responsive">
+              <table class="custom-table" id="productTable">
+                <thead>
+                  <tr>
+                    <th>Barcode</th>
+                    <th>Nama Barang</th>
+                    <th>Kategori</th>
+                    <th>Harga Beli</th>
+                    <th>Harga Jual</th>
+                    <th>Stok</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="productTableBody">
+                  <!-- Product Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. KASIR POS TAB -->
+        <section class="tab-pane" id="tab-kasir-pos">
+          <div class="pos-layout">
+            <!-- Left Side: Product Selector -->
+            <div>
+              <div class="glass-card" style="padding: 16px; margin-bottom: 16px;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                  <div class="search-input-wrap" style="flex: 1; min-width: 200px;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="posSearchProduct" class="form-control" placeholder="Cari produk / barcode di sini...">
+                  </div>
+
+                  <button class="btn btn-primary" id="btnScanBarcodeCamera">
+                    <i class="fa-solid fa-camera"></i> Scan Barcode
+                  </button>
+                </div>
+
+                <!-- Category Pills -->
+                <div id="posCategoryPills" style="display: flex; gap: 8px; margin-top: 14px; overflow-x: auto; padding-bottom: 4px;">
+                  <button class="btn btn-sm btn-secondary active-pill" data-cat="all">Semua</button>
+                  <button class="btn btn-sm btn-secondary" data-cat="Aksesori HP & Laptop">Aksesori</button>
+                  <button class="btn btn-sm btn-secondary" data-cat="Jaringan & Wifi">Jaringan</button>
+                  <button class="btn btn-sm btn-secondary" data-cat="Elektronik Rumah">Elektronik</button>
+                  <button class="btn btn-sm btn-secondary" data-cat="Komponen & Kabel">Kabel</button>
+                </div>
+              </div>
+
+              <!-- Product Cards Container -->
+              <div class="product-grid" id="posProductGrid">
+                <!-- Products dynamically rendered -->
+              </div>
+            </div>
+
+            <!-- Right Side: Cart Panel -->
+            <div class="glass-card pos-cart-panel">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 12px;">
+                <h3><i class="fa-solid fa-cart-shopping" style="color: #38bdf8;"></i> Keranjang Belanja</h3>
+                <button class="btn btn-sm btn-danger" id="btnClearCart"><i class="fa-solid fa-trash"></i> Reset</button>
+              </div>
+
+              <div class="cart-items-list" id="posCartList">
+                <!-- Cart Items -->
+              </div>
+
+              <div class="cart-summary-box">
+                <div class="summary-row">
+                  <span>Total Item</span>
+                  <span id="posTotalQty">0 Pcs</span>
+                </div>
+                <div class="summary-row">
+                  <span>Subtotal</span>
+                  <span id="posSubtotal">Rp 0</span>
+                </div>
+                <div class="summary-row total-row">
+                  <span>Total Bayar</span>
+                  <span class="total-amount" id="posGrandTotal">Rp 0</span>
+                </div>
+
+                <button class="btn btn-primary" id="btnOpenCheckout" style="width: 100%; margin-top: 16px; padding: 14px; font-size: 1rem;">
+                  <i class="fa-solid fa-credit-card"></i> Bayar Sekarang
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. REKAP POS TAB -->
+        <section class="tab-pane" id="tab-rekap-pos">
+          <div class="filter-bar">
+            <div class="filter-group">
+              <label><i class="fa-solid fa-calendar"></i> Dari Tanggal:</label>
+              <input type="date" id="rekapPosStartDate" class="form-control" style="width: auto;">
+            </div>
+            <div class="filter-group">
+              <label><i class="fa-solid fa-calendar"></i> Sampai Tanggal:</label>
+              <input type="date" id="rekapPosEndDate" class="form-control" style="width: auto;">
+            </div>
+            <button class="btn btn-primary" id="btnFilterRekapPos"><i class="fa-solid fa-filter"></i> Filter Rekap</button>
+            <button class="btn btn-secondary" id="btnResetFilterRekapPos"><i class="fa-solid fa-rotate-left"></i> Hari Ini</button>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+              <div class="stat-details">
+                <h3>Total Omset POS</h3>
+                <div class="stat-value" id="rekapPosTotalOmset">Rp 0</div>
+              </div>
+            </div>
+            <div class="stat-card stat-purple">
+              <div class="stat-icon"><i class="fa-solid fa-chart-line"></i></div>
+              <div class="stat-details">
+                <h3>Estimasi Keuntungan</h3>
+                <div class="stat-value" id="rekapPosTotalProfit">Rp 0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
+              <div class="stat-details">
+                <h3>Jumlah Transaksi</h3>
+                <div class="stat-value" id="rekapPosTotalTx">0 Transaksi</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <h3 style="margin-bottom: 18px;"><i class="fa-solid fa-list-check"></i> Riwayat Transaksi Toko Elektronik</h3>
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>No. Nota</th>
+                    <th>Waktu / Tanggal</th>
+                    <th>Jumlah Item</th>
+                    <th>Total Pembayaran</th>
+                    <th>Metode</th>
+                    <th style="text-align: right;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="rekapPosTableBody">
+                  <!-- Rows populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4B. MANAJEMEN USER TAB (Khusus Admin) -->
+        <section class="tab-pane" id="tab-manajemen-user">
+          <div class="glass-card" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+              <div>
+                <h3 style="color: #fff;"><i class="fa-solid fa-users-gear" style="color: #38bdf8;"></i> Kelola Pengguna Aplikasi</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Tambah atau hapus akun pengguna yang dapat mengakses aplikasi Ajib Store.</p>
+              </div>
+
+              <button class="btn btn-primary" id="btnOpenAddUser">
+                <i class="fa-solid fa-user-plus"></i> Tambah User Baru
+              </button>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>ID User</th>
+                    <th>Nama Lengkap</th>
+                    <th>Username</th>
+                    <th>Role / Hak Akses</th>
+                    <th>Tanggal Dibuat</th>
+                    <th style="text-align: right;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="userTableBody">
+                  <!-- Dynamic user list -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. PELANGGAN WIFI TAB (Ajib.Net) -->
+        <section class="tab-pane" id="tab-pelanggan-wifi">
+          <div class="glass-card" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+              <div class="search-input-wrap" style="flex: 1; max-width: 400px;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchWifiCustomer" class="form-control" placeholder="Cari nama / alamat / bandwidth...">
+              </div>
+
+              <button class="btn btn-wifi" id="btnOpenAddCustomer">
+                <i class="fa-solid fa-user-plus"></i> Tambah Pelanggan Ajib.Net
+              </button>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>ID Pelanggan</th>
+                    <th>Nama Pelanggan</th>
+                    <th>Alamat</th>
+                    <th>Bandwidth</th>
+                    <th>Nominal Bulanan</th>
+                    <th>Status Langganan</th>
+                    <th style="text-align: right;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="wifiCustomerTableBody">
+                  <!-- Populate dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. BAYAR WIFI TAB (Ajib.Net) -->
+        <section class="tab-pane" id="tab-bayar-wifi">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <!-- Payment Form -->
+            <div class="glass-card">
+              <h3 style="margin-bottom: 20px; color: #10b981;"><i class="fa-solid fa-wallet"></i> Form Pembayaran Wifi Ajib.Net</h3>
+              <form id="formPayWifi">
+                <div class="form-group">
+                  <label class="form-label">Pilih Pelanggan Ajib.Net</label>
+                  <select id="payWifiCustomerId" class="form-control form-control-wifi" required>
+                    <option value="">-- Pilih Nama Pelanggan --</option>
+                  </select>
+                </div>
+
+                <!-- Customer Quick Detail Display -->
+                <div id="wifiCustomerDetailCard" style="background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); padding: 16px; margin-bottom: 18px; display: none;">
+                  <div style="font-size: 0.95rem; font-weight: 700; color: #fff;" id="detailCustName">-</div>
+                  <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;" id="detailCustAddress">-</div>
+                  <div style="display: flex; gap: 16px; margin-top: 10px; font-size: 0.85rem;">
+                    <div>Bandwidth: <strong id="detailCustBw" style="color: #34d399;">-</strong></div>
+                    <div>Nominal: <strong id="detailCustNominal" style="color: #38bdf8;">-</strong></div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Periode Bulan Pembayaran</label>
+                  <input type="month" id="payWifiMonth" class="form-control form-control-wifi" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Jumlah Pembayaran (Rp)</label>
+                  <input type="number" id="payWifiAmount" class="form-control form-control-wifi" placeholder="150000" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Catatan / Keterangan</label>
+                  <input type="text" id="payWifiNotes" class="form-control form-control-wifi" placeholder="Contoh: Lunas via Kasir Ajib Store">
+                </div>
+
+                <button type="submit" class="btn btn-wifi" style="width: 100%; padding: 14px;">
+                  <i class="fa-solid fa-circle-check"></i> Proses Pembayaran Wifi
+                </button>
+              </form>
+            </div>
+
+            <!-- Recent Wifi Payments Table -->
+            <div class="glass-card">
+              <h3 style="margin-bottom: 18px;"><i class="fa-solid fa-clock-rotate-left"></i> Pembayaran Wifi Terakhir</h3>
+              <div class="table-responsive">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Pelanggan</th>
+                      <th>Bulan</th>
+                      <th>Nominal</th>
+                      <th style="text-align: right;">Struk</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentWifiPayTableBody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. REKAP WIFI TAB (Ajib.Net) -->
+        <section class="tab-pane" id="tab-rekap-wifi">
+          <div class="filter-bar">
+            <div class="filter-group">
+              <label><i class="fa-solid fa-calendar"></i> Dari Tanggal:</label>
+              <input type="date" id="rekapWifiStartDate" class="form-control" style="width: auto;">
+            </div>
+            <div class="filter-group">
+              <label><i class="fa-solid fa-calendar"></i> Sampai Tanggal:</label>
+              <input type="date" id="rekapWifiEndDate" class="form-control" style="width: auto;">
+            </div>
+            <button class="btn btn-wifi" id="btnFilterRekapWifi"><i class="fa-solid fa-filter"></i> Filter Rekap Wifi</button>
+            <button class="btn btn-secondary" id="btnResetFilterRekapWifi"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card stat-wifi">
+              <div class="stat-icon"><i class="fa-solid fa-wifi"></i></div>
+              <div class="stat-details">
+                <h3>Total Iuran Terkumpul</h3>
+                <div class="stat-value" id="rekapWifiTotalOmset">Rp 0</div>
+              </div>
+            </div>
+            <div class="stat-card stat-wifi">
+              <div class="stat-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+              <div class="stat-details">
+                <h3>Jumlah Tagihan Terbayar</h3>
+                <div class="stat-value" id="rekapWifiTotalTx">0 Tagihan</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <h3 style="margin-bottom: 18px;"><i class="fa-solid fa-list"></i> Data Rekap Pembayaran Wifi Ajib.Net</h3>
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>No. Transaksi</th>
+                    <th>Tanggal Bayar</th>
+                    <th>Nama Pelanggan</th>
+                    <th>Bandwidth</th>
+                    <th>Periode Bulan</th>
+                    <th>Nominal</th>
+                    <th style="text-align: right;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="rekapWifiTableBody">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- Modal 1: Add/Edit Product -->
+  <div class="modal-overlay" id="modalProduct">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalProductTitle">Tambah Barang Elektronik</h3>
+        <button class="modal-close-btn" class="closeModalBtn" data-modal="modalProduct">&times;</button>
+      </div>
+      <form id="formProduct">
+        <input type="hidden" id="prodId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Kode Barcode / SKU</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="prodBarcode" class="form-control" placeholder="Contoh: 89912345678" required>
+              <button type="button" class="btn btn-secondary" id="btnGenBarcode"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nama Barang Elektronik</label>
+            <input type="text" id="prodName" class="form-control" placeholder="Contoh: Router Wifi TP-Link Archer C6" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Kategori</label>
+            <select id="prodCategory" class="form-control" required>
+              <option value="Aksesori HP & Laptop">Aksesori HP & Laptop</option>
+              <option value="Jaringan & Wifi">Jaringan & Wifi</option>
+              <option value="Elektronik Rumah">Elektronik Rumah</option>
+              <option value="Komponen & Kabel">Komponen & Kabel</option>
+            </select>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group">
+              <label class="form-label">Harga Beli (Modal)</label>
+              <input type="number" id="prodCostPrice" class="form-control" placeholder="250000" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Harga Jual</label>
+              <input type="number" id="prodSellPrice" class="form-control" placeholder="320000" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jumlah Stok</label>
+            <input type="number" id="prodStock" class="form-control" placeholder="15" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalProduct">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Barang</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Camera Barcode Scanner -->
+  <div class="modal-overlay" id="modalCameraScanner">
+    <div class="modal-content" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-camera"></i> Scan Barcode Kamera</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalCameraScanner">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Arahkan kamera smartphone/webcam Anda ke kode barcode produk.</p>
+        <div id="reader"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalCameraScanner">Tutup Kamera</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Checkout POS -->
+  <div class="modal-overlay" id="modalCheckout">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>Pembayaran Transaksi POS</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalCheckout">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: rgba(15, 23, 42, 0.7); padding: 16px; border-radius: var(--radius-md); text-align: center; margin-bottom: 20px;">
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Total Tagihan</span>
+          <div style="font-size: 2rem; font-weight: 800; color: #38bdf8;" id="checkoutTotalDisplay">Rp 0</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nominal Uang Tunai (Rp)</label>
+          <input type="number" id="checkoutCash" class="form-control" placeholder="Masukkan jumlah uang bayar..." required style="font-size: 1.1rem; padding: 14px;">
+        </div>
+
+        <!-- Quick Cash Buttons -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;" id="quickCashButtons">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.5); padding: 12px 16px; border-radius: var(--radius-md);">
+          <span style="font-weight: 600; color: var(--text-muted);">Kembalian:</span>
+          <span style="font-size: 1.25rem; font-weight: 800; color: #34d399;" id="checkoutChangeDisplay">Rp 0</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalCheckout">Batal</button>
+        <button type="button" class="btn btn-primary" id="btnConfirmCheckout"><i class="fa-solid fa-print"></i> Bayar & Cetak Struk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Struk Printable POS Receipt -->
+  <div class="modal-overlay" id="modalPosReceipt">
+    <div class="modal-content" style="max-width: 400px; background: #fff; color: #000;">
+      <div class="modal-header" style="border-bottom: 1px solid #ddd;">
+        <h3 style="color: #000;">Struk Belanja Ajib Store</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalPosReceipt" style="color: #000;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <div class="receipt-paper" id="posReceiptArea">
+          <!-- Thermal receipt populated dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid #ddd; background: #f9fafb;">
+        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalPosReceipt">Tutup</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Cetak Struk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Add/Edit Customer Wifi Ajib.Net -->
+  <div class="modal-overlay" id="modalCustomer">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalCustomerTitle">Tambah Pelanggan Wifi Ajib.Net</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalCustomer">&times;</button>
+      </div>
+      <form id="formCustomer">
+        <input type="hidden" id="custId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Nama Pelanggan</label>
+            <input type="text" id="custName" class="form-control form-control-wifi" placeholder="Contoh: Budi Santoso" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Alamat Lengkap</label>
+            <textarea id="custAddress" class="form-control form-control-wifi" rows="2" placeholder="Contoh: Jl. Merdeka No. 12, RT 02/05" required></textarea>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group">
+              <label class="form-label">Bandwidth Package</label>
+              <select id="custBandwidth" class="form-control form-control-wifi" required>
+                <option value="10 Mbps">10 Mbps</option>
+                <option value="20 Mbps">20 Mbps</option>
+                <option value="30 Mbps">30 Mbps</option>
+                <option value="50 Mbps">50 Mbps</option>
+                <option value="100 Mbps">100 Mbps</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nominal Bulanan (Rp)</label>
+              <input type="number" id="custMonthlyAmount" class="form-control form-control-wifi" placeholder="150000" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalCustomer">Batal</button>
+          <button type="submit" class="btn btn-wifi">Simpan Pelanggan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 6: Struk Pembayaran Wifi Ajib.Net -->
+  <div class="modal-overlay" id="modalWifiReceipt">
+    <div class="modal-content" style="max-width: 400px; background: #fff; color: #000;">
+      <div class="modal-header" style="border-bottom: 1px solid #ddd;">
+        <h3 style="color: #000;">Bukti Bayar Wifi Ajib.Net</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalWifiReceipt" style="color: #000;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <div class="receipt-paper" id="wifiReceiptArea">
+          <!-- Wifi receipt populated dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid #ddd; background: #f9fafb;">
+        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalWifiReceipt">Tutup</button>
+        <button type="button" class="btn btn-wifi" onclick="window.print()"><i class="fa-solid fa-print"></i> Cetak Struk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Tambah / Edit User -->
+  <div class="modal-overlay" id="modalUser">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 id="modalUserTitle"><i class="fa-solid fa-user-plus"></i> Tambah Pengguna Baru</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalUser">&times;</button>
+      </div>
+      <form id="formAddUser">
+        <input type="hidden" id="userId" value="">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Nama Lengkap</label>
+            <input type="text" id="addUserName" class="form-control" placeholder="Contoh: Rina Kasir 2" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Username (untuk Login)</label>
+            <input type="text" id="addUserUsername" class="form-control" placeholder="Contoh: rina" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="addUserPassword" class="form-control" placeholder="••••••••" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipe Role / Hak Akses</label>
+            <select id="addUserRole" class="form-control" required>
+              <option value="kasir">Kasir (Akses Kasir POS, Rekap POS, Bayar & Rekap Wifi)</option>
+              <option value="admin">Administrator (Full Access Semua Menu)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalUser">Batal</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveUser">Simpan User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL LOGIN SCREEN -->
+  <div class="login-screen-wrapper" id="loginScreen">
+    <div class="login-card">
+      <div class="login-brand-logo">
+        <i class="fa-solid fa-bolt"></i>
+      </div>
+      <h2 style="color: #fff; font-weight: 800; margin-bottom: 4px;">Ajib Store & Ajib.Net</h2>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Silakan login untuk mengakses sistem POS</p>
+
+      <form id="formLogin">
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label">Username</label>
+          <input type="text" id="loginUsername" class="form-control" placeholder="Masukkan username" required>
+        </div>
+
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label">Password</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem;">
+          <i class="fa-solid fa-right-to-bracket"></i> Masuk Akun
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="js/app.js"></script>
+</body>
+</html>

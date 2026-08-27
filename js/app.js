@@ -293,6 +293,14 @@
       });
     });
 
+    // View All Tx from Dashboard
+    const btnDashViewAll = document.getElementById('btnDashViewAllTx');
+    if (btnDashViewAll) {
+      btnDashViewAll.addEventListener('click', () => {
+        switchTab('rekap-pos');
+      });
+    }
+
     // Modal Close Triggers
     document.querySelectorAll('.closeModalBtn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -309,7 +317,7 @@
   function switchTab(tabId) {
     // Role Security Guard for Kasir
     if (state.currentUser && state.currentUser.role === 'kasir' && !KASIR_ALLOWED_TABS.includes(tabId)) {
-      alert('Akses Ditolak: User Kasir hanya diperbolehkan mengakses menu Kasir POS, Rekap POS, Bayar Wifi, dan Rekap Wifi.');
+      alert('Akses Ditolak: User Kasir hanya diperbolehkan mengakses menu Kasir, Rekap Transaksi, Bayar Wifi, dan Rekap Wifi.');
       tabId = 'kasir-pos';
     }
 
@@ -336,10 +344,10 @@
 
     // Update Title
     const titleMap = {
-      'dashboard': 'Dashboard Utama',
+      'dashboard': 'Ajib Store',
       'stok-barang': 'Kelola Stok Barang Elektronik',
-      'kasir-pos': 'Kasir POS Toko Elektronik',
-      'rekap-pos': 'Rekap Transaksi Toko Elektronik',
+      'kasir-pos': 'Kasir Toko',
+      'rekap-pos': 'Rekap Transaksi Toko',
       'manajemen-user': 'Manajemen Pengguna Aplikasi',
       'pelanggan-wifi': 'Kelola Pelanggan Wifi Ajib.Net',
       'bayar-wifi': 'Pembayaran Tagihan Ajib.Net',
@@ -384,8 +392,6 @@
   // ==========================================
   // 3. Dashboard Functionality
   // ==========================================
-  let chartInstance = null;
-
   function renderDashboard() {
     const todayStr = formatDateIso(new Date());
     
@@ -421,64 +427,56 @@
       `).join('');
     }
 
-    // Chart Render
-    renderDashboardChart();
+    // Render Recent Transactions
+    renderDashboardRecentTx();
   }
 
-  function renderDashboardChart() {
-    const ctx = document.getElementById('dashboardChart');
-    if (!ctx) return;
+  function renderDashboardRecentTx() {
+    const tbody = document.getElementById('dashRecentTxTableBody');
+    if (!tbody) return;
 
-    if (chartInstance) {
-      chartInstance.destroy();
+    // Combine POS and Wifi transactions
+    const combinedTx = [
+      ...state.posTx.map(t => ({
+        id: t.id,
+        receiptNo: t.receiptNo,
+        timestamp: t.timestamp,
+        type: 'pos',
+        typeLabel: 'Toko',
+        amount: t.total
+      })),
+      ...state.wifiTx.map(t => ({
+        id: t.id,
+        receiptNo: t.receiptNo,
+        timestamp: t.timestamp,
+        type: 'wifi',
+        typeLabel: 'Wifi',
+        amount: t.amount
+      }))
+    ];
+
+    combinedTx.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const recents = combinedTx.slice(0, 6);
+
+    if (recents.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 25px;">Belum ada riwayat transaksi.</td></tr>`;
+      return;
     }
 
-    // Calculate last 7 days sales
-    const labels = [];
-    const salesData = [];
-
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = formatDateIso(d);
-      const dayName = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
-
-      labels.push(dayName);
-      const total = state.posTx.filter(t => t.dateStr === dateStr).reduce((sum, t) => sum + t.total, 0);
-      salesData.push(total);
-    }
-
-    chartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Omset Penjualan (Rp)',
-          data: salesData,
-          backgroundColor: 'rgba(37, 99, 235, 0.75)',
-          borderColor: '#2563eb',
-          borderWidth: 1.5,
-          borderRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          x: {
-            grid: { color: '#f1f5f9' },
-            ticks: { color: '#64748b', font: { family: 'Inter' } }
-          },
-          y: {
-            grid: { color: '#f1f5f9' },
-            ticks: { color: '#64748b', font: { family: 'Inter' } }
-          }
-        }
-      }
-    });
+    tbody.innerHTML = recents.map(t => `
+      <tr>
+        <td style="font-family: monospace; color: var(--accent-pos); font-weight: 600;">${t.receiptNo}</td>
+        <td style="font-size: 0.8rem; color: var(--text-muted);">${formatDateTimeReadable(t.timestamp)}</td>
+        <td>
+          <span class="badge ${t.type === 'wifi' ? 'badge-success' : 'badge-info'}">
+            ${t.type === 'wifi' ? '<i class="fa-solid fa-wifi"></i>' : '<i class="fa-solid fa-store"></i>'} ${t.typeLabel}
+          </span>
+        </td>
+        <td style="font-weight: 700; color: ${t.type === 'wifi' ? 'var(--accent-wifi)' : 'var(--accent-pos)'};">
+          ${formatRupiah(t.amount)}
+        </td>
+      </tr>
+    `).join('');
   }
 
   // ==========================================

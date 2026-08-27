@@ -43,11 +43,11 @@
         </a>
         <a class="nav-item" data-tab="kasir-pos">
           <i class="fa-solid fa-cash-register"></i>
-          <span>Kasir POS</span>
+          <span>Kasir</span>
         </a>
         <a class="nav-item" data-tab="rekap-pos">
           <i class="fa-solid fa-receipt"></i>
-          <span>Rekap POS</span>
+          <span>Rekap Transaksi</span>
         </a>
         <a class="nav-item" data-tab="manajemen-user">
           <i class="fa-solid fa-users-gear"></i>
@@ -86,7 +86,7 @@
             <i class="fa-solid fa-bars"></i>
           </button>
           <div class="page-title">
-            <h1 id="currentPageTitle">Dashboard Utama</h1>
+            <h1 id="currentPageTitle">Ajib Store</h1>
           </div>
         </div>
 
@@ -120,28 +120,28 @@
             <div class="stat-card">
               <div class="stat-icon"><i class="fa-solid fa-rupiah-sign"></i></div>
               <div class="stat-details">
-                <h3>Omset POS (Hari Ini)</h3>
+                <h3>Pendapatan Hari Ini</h3>
                 <div class="stat-value" id="dashTodayPosRevenue">Rp 0</div>
               </div>
             </div>
             <div class="stat-card">
               <div class="stat-icon"><i class="fa-solid fa-basket-shopping"></i></div>
               <div class="stat-details">
-                <h3>Transaksi POS (Hari Ini)</h3>
+                <h3>Transaksi Hari Ini</h3>
                 <div class="stat-value" id="dashTodayPosCount">0 Tx</div>
               </div>
             </div>
             <div class="stat-card stat-wifi">
               <div class="stat-icon"><i class="fa-solid fa-wifi"></i></div>
               <div class="stat-details">
-                <h3>Pelanggan Wifi Ajib.Net</h3>
+                <h3>Pelanggan Ajib.Net</h3>
                 <div class="stat-value" id="dashWifiCustomerCount">0 User</div>
               </div>
             </div>
             <div class="stat-card stat-wifi">
               <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
               <div class="stat-details">
-                <h3>Iuran Wifi (Bulan Ini)</h3>
+                <h3>Pembayaran Wifi Bulan Ini</h3>
                 <div class="stat-value" id="dashWifiMonthlyRevenue">Rp 0</div>
               </div>
             </div>
@@ -149,17 +149,30 @@
 
           <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
             <div class="glass-card">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
-                <h3><i class="fa-solid fa-chart-area" style="color: var(--accent-pos);"></i> Grafik Penjualan POS (7 Hari Terakhir)</h3>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-pos);"></i> Riwayat Transaksi Terakhir</h3>
+                <button class="btn btn-sm btn-secondary" id="btnDashViewAllTx"><i class="fa-solid fa-arrow-right"></i> Lihat Semua</button>
               </div>
-              <div style="position: relative; height: 300px;">
-                <canvas id="dashboardChart"></canvas>
+              <div class="table-responsive" style="max-height: 290px;">
+                <table class="custom-table">
+                  <thead>
+                    <tr>
+                      <th>No. Nota</th>
+                      <th>Waktu</th>
+                      <th>Layanan</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashRecentTxTableBody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
               </div>
             </div>
 
             <div class="glass-card">
               <h3 style="margin-bottom: 16px;"><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-warning);"></i> Peringatan Stok Menipis</h3>
-              <div id="lowStockList" style="display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto;">
+              <div id="lowStockList" style="display: flex; flex-direction: column; gap: 10px; max-height: 290px; overflow-y: auto;">
                 <!-- Dynamically populated low stock products -->
               </div>
             </div>
@@ -298,7 +311,7 @@
             <div class="stat-card">
               <div class="stat-icon"><i class="fa-solid fa-sack-dollar"></i></div>
               <div class="stat-details">
-                <h3>Total Omset POS</h3>
+                <h3>Total Omset Penjualan</h3>
                 <div class="stat-value" id="rekapPosTotalOmset">Rp 0</div>
               </div>
             </div>
@@ -615,7 +628,7 @@
   <div class="modal-overlay" id="modalCheckout">
     <div class="modal-content" style="max-width: 440px;">
       <div class="modal-header">
-        <h3>Pembayaran Transaksi POS</h3>
+        <h3>Pembayaran Transaksi</h3>
         <button class="modal-close-btn closeModalBtn" data-modal="modalCheckout">&times;</button>
       </div>
       <div class="modal-body">
@@ -771,7 +784,7 @@
       <div class="login-brand-logo">
         <i class="fa-solid fa-bolt"></i>
       </div>
-      <h2 style="color: var(--text-main); font-weight: 800; margin-bottom: 24px;">Ajib</h2>
+      <h2 style="color: var(--text-main); font-weight: 800; margin-bottom: 24px;">Ajib Store</h2>
 
       <form id="formLogin">
         <div class="form-group" style="text-align: left;">

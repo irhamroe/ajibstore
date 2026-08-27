@@ -483,26 +483,103 @@
         closeModal(modalId);
       });
     });
+    // Beep Audio Feedback on successful scan
+    function playBeepSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 1200;
+        gain.gain.value = 0.25;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        setTimeout(() => {
+          osc.stop();
+          ctx.close();
+        }, 120);
+      } catch (e) {
+        // AudioContext not allowed or supported
+      }
+    }
+
     // Helper function for camera barcode scanner
     function launchScanner(onScanSuccess) {
       openModal('modalCameraScanner');
-      if (!state.html5QrcodeScanner) {
-        state.html5QrcodeScanner = new Html5Qrcode('reader');
+
+      // Explicitly define 1D Barcode + 2D Formats for maximum scanner accuracy
+      let formatsToSupport = undefined;
+      if (typeof Html5QrcodeSupportedFormats !== 'undefined') {
+        formatsToSupport = [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.CODE_93,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.ITF,
+          Html5QrcodeSupportedFormats.QR_CODE
+        ];
       }
-      const config = { fps: 10, qrbox: 250 };
+
+      if (!state.html5QrcodeScanner) {
+        state.html5QrcodeScanner = new Html5Qrcode('reader', {
+          formatsToSupport: formatsToSupport,
+          verbose: false
+        });
+      }
+
+      // Rectangular scanning region tailored for 1D barcodes (EAN-13, CODE128)
+      const qrboxFunction = (viewfinderWidth, viewfinderHeight) => {
+        const width = Math.min(viewfinderWidth * 0.88, 340);
+        const height = Math.min(viewfinderHeight * 0.45, 170);
+        return { width: Math.max(width, 220), height: Math.max(height, 100) };
+      };
+
+      const config = {
+        fps: 15,
+        qrbox: qrboxFunction,
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true
+        }
+      };
+
+      const handleSuccess = decodedText => {
+        playBeepSound();
+        onScanSuccess(decodedText);
+        if (state.html5QrcodeScanner) {
+          state.html5QrcodeScanner.stop().then(() => {
+            closeModal('modalCameraScanner');
+          }).catch(err => {
+            console.error('Stop scanner error:', err);
+            closeModal('modalCameraScanner');
+          });
+        } else {
+          closeModal('modalCameraScanner');
+        }
+      };
+
+      // Try camera with optimal resolution & environment facing mode
       state.html5QrcodeScanner.start(
         { facingMode: 'environment' },
         config,
-        decodedText => {
-          onScanSuccess(decodedText);
-          state.html5QrcodeScanner.stop().then(() => {
-            closeModal('modalCameraScanner');
-          }).catch(err => console.error('Stop scanner error:', err));
-        },
-        errorMessage => {
-          // Scanner frame error, ignore
-        }
-      ).catch(err => console.error('Start scanner error:', err));
+        handleSuccess,
+        () => {}
+      ).catch(err => {
+        console.warn('First start attempt failed, retrying with fallback camera options:', err);
+        // Fallback try without specific constraints if environment facing fails
+        state.html5QrcodeScanner.start(
+          { facingMode: 'user' },
+          config,
+          handleSuccess,
+          () => {}
+        ).catch(err2 => {
+          alert('Tidak dapat mengakses kamera: ' + (err2.message || err2) + '\nPastikan izin akses kamera sudah diberikan pada browser Anda.');
+          closeModal('modalCameraScanner');
+        });
+      });
     }
 
     // Barcode Scanner Button (Product Modal - Tambah Barang)
@@ -605,7 +682,19 @@
     if (modal) modal.classList.remove('active');
 
     if (modalId === 'modalCameraScanner' && state.html5QrcodeScanner) {
-      state.html5QrcodeScanner.clear().catch(err => console.log(err));
+      try {
+        if (state.html5QrcodeScanner.getState && state.html5QrcodeScanner.getState() === 2) {
+          state.html5QrcodeScanner.stop().then(() => {
+            state.html5QrcodeScanner.clear().catch(e => console.log(e));
+          }).catch(e => {
+            state.html5QrcodeScanner.clear().catch(err => console.log(err));
+          });
+        } else {
+          state.html5QrcodeScanner.clear().catch(err => console.log(err));
+        }
+      } catch (e) {
+        state.html5QrcodeScanner.clear().catch(err => console.log(err));
+      }
     }
   }
 

@@ -188,16 +188,17 @@
                 </div>
                 <select id="filterProductCategory" class="form-control" style="width: 170px;">
                   <option value="">Semua Kategori</option>
-                  <option value="Aksesori HP & Laptop">Aksesori HP & Laptop</option>
-                  <option value="Jaringan & Wifi">Jaringan & Wifi</option>
-                  <option value="Elektronik Rumah">Elektronik Rumah</option>
-                  <option value="Komponen & Kabel">Komponen & Kabel</option>
                 </select>
               </div>
 
-              <button class="btn btn-primary" id="btnOpenAddProduct">
-                <i class="fa-solid fa-plus"></i> Tambah Barang Elektronik
-              </button>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-secondary" id="btnOpenManageCategories">
+                  <i class="fa-solid fa-tags"></i> Kelola Kategori
+                </button>
+                <button class="btn btn-primary" id="btnOpenAddProduct">
+                  <i class="fa-solid fa-plus"></i> Tambah Barang
+                </button>
+              </div>
             </div>
           </div>
 
@@ -556,30 +557,31 @@
   <div class="modal-overlay" id="modalProduct">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="modalProductTitle">Tambah Barang Elektronik</h3>
-        <button class="modal-close-btn" class="closeModalBtn" data-modal="modalProduct">&times;</button>
+        <h3 id="modalProductTitle">Tambah Barang</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalProduct">&times;</button>
       </div>
       <form id="formProduct">
         <input type="hidden" id="prodId">
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Kode Barcode / SKU</label>
-            <div style="display: flex; gap: 8px;">
-              <input type="text" id="prodBarcode" class="form-control" placeholder="Contoh: 89912345678" required>
-              <button type="button" class="btn btn-secondary" id="btnGenBarcode"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" style="margin-bottom: 0;">Kode Barcode / SKU</label>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">(Opsional jika tanpa barcode)</span>
             </div>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="prodBarcode" class="form-control" placeholder="Scan barcode atau klik Auto...">
+              <button type="button" class="btn btn-secondary" id="btnGenBarcode" title="Generate SKU Otomatis"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto</button>
+            </div>
+            <p style="font-size: 0.73rem; color: var(--text-dim); margin-top: 4px;">*Jika barang tidak memiliki barcode fisik, klik <strong>Auto</strong> atau kosongkan agar dibuatkan SKU otomatis.</p>
           </div>
           <div class="form-group">
-            <label class="form-label">Nama Barang Elektronik</label>
+            <label class="form-label">Nama Barang</label>
             <input type="text" id="prodName" class="form-control" placeholder="Contoh: Router Wifi TP-Link Archer C6" required>
           </div>
           <div class="form-group">
             <label class="form-label">Kategori</label>
             <select id="prodCategory" class="form-control" required>
-              <option value="Aksesori HP & Laptop">Aksesori HP & Laptop</option>
-              <option value="Jaringan & Wifi">Jaringan & Wifi</option>
-              <option value="Elektronik Rumah">Elektronik Rumah</option>
-              <option value="Komponen & Kabel">Komponen & Kabel</option>
+              <!-- Populated dynamically -->
             </select>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
@@ -602,6 +604,46 @@
           <button type="submit" class="btn btn-primary">Simpan Barang</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal 1B: Kelola Kategori -->
+  <div class="modal-overlay" id="modalCategory">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-tags" style="color: var(--accent-pos);"></i> Kelola Kategori Barang</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalCategory">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="formCategory" style="margin-bottom: 20px;">
+          <input type="hidden" id="editCategoryOldName" value="">
+          <label class="form-label" id="lblCatFormTitle">Tambah Kategori Baru</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="inputCategoryName" class="form-control" placeholder="Nama kategori..." required>
+            <button type="submit" class="btn btn-primary" id="btnSaveCategory" style="white-space: nowrap;"><i class="fa-solid fa-plus"></i> Simpan</button>
+            <button type="button" class="btn btn-secondary" id="btnCancelEditCat" style="display: none;">Batal</button>
+          </div>
+        </form>
+
+        <label class="form-label">Daftar Kategori Tersedia</label>
+        <div class="table-responsive" style="max-height: 260px;">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">No</th>
+                <th>Nama Kategori</th>
+                <th style="text-align: right; width: 100px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="categoryTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalCategory">Tutup</button>
+      </div>
     </div>
   </div>
 

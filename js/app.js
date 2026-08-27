@@ -15,8 +15,16 @@
     POS_TX: 'ajib_store_pos_transactions_v1',
     WIFI_TX: 'ajib_store_wifi_transactions_v1',
     AUTH_USER: 'ajib_store_auth_user_v1',
-    USERS_LIST: 'ajib_store_users_list_v2'
+    USERS_LIST: 'ajib_store_users_list_v2',
+    CATEGORIES: 'ajib_store_categories_v1'
   };
+
+  const DEFAULT_CATEGORIES = [
+    'Aksesori HP & Laptop',
+    'Jaringan & Wifi',
+    'Elektronik Rumah',
+    'Komponen & Kabel'
+  ];
 
   const DEFAULT_USERS = [
     { id: 'u1', name: 'Administrator', username: 'admin', password: 'admin123', role: 'admin', createdAt: '2026-01-01' },
@@ -48,6 +56,7 @@
     posTx: [],
     wifiTx: [],
     users: [],
+    categories: [],
     cart: [],
     activeTab: 'dashboard',
     posCategoryFilter: 'all',
@@ -58,6 +67,7 @@
   // Helper Functions
   function loadData() {
     state.products = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRODUCTS)) || DEFAULT_PRODUCTS;
+    state.categories = JSON.parse(localStorage.getItem(STORAGE_KEYS.CATEGORIES)) || DEFAULT_CATEGORIES;
     state.customers = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMERS)) || DEFAULT_CUSTOMERS;
     state.posTx = JSON.parse(localStorage.getItem(STORAGE_KEYS.POS_TX)) || [];
     state.wifiTx = JSON.parse(localStorage.getItem(STORAGE_KEYS.WIFI_TX)) || [];
@@ -80,6 +90,7 @@
 
   function saveData(key) {
     if (key === STORAGE_KEYS.PRODUCTS) localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(state.products));
+    if (key === STORAGE_KEYS.CATEGORIES) localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(state.categories));
     if (key === STORAGE_KEYS.CUSTOMERS) localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(state.customers));
     if (key === STORAGE_KEYS.POS_TX) localStorage.setItem(STORAGE_KEYS.POS_TX, JSON.stringify(state.posTx));
     if (key === STORAGE_KEYS.WIFI_TX) localStorage.setItem(STORAGE_KEYS.WIFI_TX, JSON.stringify(state.wifiTx));
@@ -346,7 +357,7 @@
     // Update Title
     const titleMap = {
       'dashboard': 'Dashboard',
-      'stok-barang': 'Kelola Stok Barang Elektronik',
+      'stok-barang': 'Stok Barang',
       'kasir-pos': 'Kasir Toko',
       'rekap-pos': 'Rekap Transaksi Toko',
       'manajemen-user': 'Manajemen Pengguna Aplikasi',
@@ -481,26 +492,219 @@
   }
 
   // ==========================================
+  // 3B. Manajemen Kategori Dinamis
+  // ==========================================
+  function initCategoryManagement() {
+    const btnOpen = document.getElementById('btnOpenManageCategories');
+    if (btnOpen) {
+      btnOpen.addEventListener('click', () => {
+        resetCategoryForm();
+        renderCategoryTable();
+        openModal('modalCategory');
+      });
+    }
+
+    const form = document.getElementById('formCategory');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('inputCategoryName');
+        const oldName = document.getElementById('editCategoryOldName').value.trim();
+        const newName = input.value.trim();
+
+        if (!newName) return;
+
+        if (oldName) {
+          // Edit Kategori
+          const exists = state.categories.some(c => c.toLowerCase() === newName.toLowerCase() && c.toLowerCase() !== oldName.toLowerCase());
+          if (exists) {
+            alert(`Kategori "${newName}" sudah ada!`);
+            return;
+          }
+
+          const idx = state.categories.indexOf(oldName);
+          if (idx !== -1) {
+            state.categories[idx] = newName;
+          }
+
+          // Sinkronisasi kategori pada semua barang terkait
+          state.products.forEach(p => {
+            if (p.category === oldName) {
+              p.category = newName;
+            }
+          });
+          saveData(STORAGE_KEYS.PRODUCTS);
+          saveData(STORAGE_KEYS.CATEGORIES);
+
+          alert(`Kategori "${oldName}" berhasil diubah menjadi "${newName}".`);
+        } else {
+          // Tambah Kategori Baru
+          const exists = state.categories.some(c => c.toLowerCase() === newName.toLowerCase());
+          if (exists) {
+            alert(`Kategori "${newName}" sudah ada!`);
+            return;
+          }
+
+          state.categories.push(newName);
+          saveData(STORAGE_KEYS.CATEGORIES);
+        }
+
+        resetCategoryForm();
+        renderCategoryTable();
+        renderCategoryDropdowns();
+        renderProductTable();
+        renderPosProducts();
+      });
+    }
+
+    const btnCancel = document.getElementById('btnCancelEditCat');
+    if (btnCancel) {
+      btnCancel.addEventListener('click', resetCategoryForm);
+    }
+  }
+
+  function resetCategoryForm() {
+    const form = document.getElementById('formCategory');
+    if (form) form.reset();
+    document.getElementById('editCategoryOldName').value = '';
+    document.getElementById('lblCatFormTitle').textContent = 'Tambah Kategori Baru';
+    document.getElementById('btnSaveCategory').innerHTML = '<i class="fa-solid fa-plus"></i> Simpan';
+    const btnCancel = document.getElementById('btnCancelEditCat');
+    if (btnCancel) btnCancel.style.display = 'none';
+  }
+
+  function renderCategoryTable() {
+    const tbody = document.getElementById('categoryTableBody');
+    if (!tbody) return;
+
+    if (state.categories.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 20px;">Belum ada kategori.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = state.categories.map((cat, i) => `
+      <tr>
+        <td style="font-weight: 600; color: var(--text-muted);">${i + 1}</td>
+        <td style="font-weight: 600;">${cat}</td>
+        <td style="text-align: right;">
+          <div style="display: inline-flex; gap: 4px;">
+            <button class="btn btn-sm btn-secondary btn-edit-cat" data-name="${cat}" title="Edit Kategori"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-danger btn-del-cat" data-name="${cat}" title="Hapus Kategori"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('.btn-edit-cat').forEach(b => {
+      b.addEventListener('click', () => {
+        const catName = b.getAttribute('data-name');
+        document.getElementById('inputCategoryName').value = catName;
+        document.getElementById('editCategoryOldName').value = catName;
+        document.getElementById('lblCatFormTitle').textContent = `Edit Kategori "${catName}"`;
+        document.getElementById('btnSaveCategory').innerHTML = '<i class="fa-solid fa-check"></i> Simpan';
+        const btnCancel = document.getElementById('btnCancelEditCat');
+        if (btnCancel) btnCancel.style.display = 'inline-flex';
+        document.getElementById('inputCategoryName').focus();
+      });
+    });
+
+    tbody.querySelectorAll('.btn-del-cat').forEach(b => {
+      b.addEventListener('click', () => {
+        const catName = b.getAttribute('data-name');
+        const count = state.products.filter(p => p.category === catName).length;
+
+        const confirmMsg = count > 0 
+          ? `Terdapat ${count} barang dengan kategori "${catName}". Yakin ingin menghapus kategori ini? (Barang akan dipindahkan ke kategori "Umum")`
+          : `Yakin ingin menghapus kategori "${catName}"?`;
+
+        if (confirm(confirmMsg)) {
+          state.categories = state.categories.filter(c => c !== catName);
+          if (count > 0) {
+            state.products.forEach(p => {
+              if (p.category === catName) p.category = 'Umum';
+            });
+            if (!state.categories.includes('Umum')) state.categories.push('Umum');
+            saveData(STORAGE_KEYS.PRODUCTS);
+          }
+          saveData(STORAGE_KEYS.CATEGORIES);
+
+          renderCategoryTable();
+          renderCategoryDropdowns();
+          renderProductTable();
+          renderPosProducts();
+        }
+      });
+    });
+  }
+
+  function renderCategoryDropdowns() {
+    // 1. Filter dropdown in Stok Barang
+    const filterCat = document.getElementById('filterProductCategory');
+    if (filterCat) {
+      const currVal = filterCat.value;
+      filterCat.innerHTML = `<option value="">Semua Kategori</option>` + 
+        state.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      filterCat.value = currVal;
+    }
+
+    // 2. Select in Product Add/Edit Modal
+    const prodCat = document.getElementById('prodCategory');
+    if (prodCat) {
+      const currVal = prodCat.value;
+      prodCat.innerHTML = state.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      if (currVal && state.categories.includes(currVal)) {
+        prodCat.value = currVal;
+      }
+    }
+
+    // 3. Category Pills in Kasir POS
+    const pillsContainer = document.getElementById('posCategoryPills');
+    if (pillsContainer) {
+      pillsContainer.innerHTML = `
+        <button class="btn btn-sm btn-secondary ${state.posCategoryFilter === 'all' ? 'active-pill' : ''}" data-cat="all">Semua</button>
+      ` + state.categories.map(c => `
+        <button class="btn btn-sm btn-secondary ${state.posCategoryFilter === c ? 'active-pill' : ''}" data-cat="${c}">${c}</button>
+      `).join('');
+
+      pillsContainer.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          pillsContainer.querySelectorAll('button').forEach(b => b.classList.remove('active-pill'));
+          btn.classList.add('active-pill');
+          state.posCategoryFilter = btn.getAttribute('data-cat');
+          renderPosProducts();
+        });
+      });
+    }
+  }
+
+  // ==========================================
   // 4. Products Management (Stok Barang)
   // ==========================================
   function initProductManagement() {
     document.getElementById('btnOpenAddProduct').addEventListener('click', () => {
       document.getElementById('formProduct').reset();
       document.getElementById('prodId').value = '';
-      document.getElementById('modalProductTitle').textContent = 'Tambah Barang Elektronik';
+      document.getElementById('modalProductTitle').textContent = 'Tambah Barang';
+      renderCategoryDropdowns();
       openModal('modalProduct');
     });
 
     document.getElementById('btnGenBarcode').addEventListener('click', () => {
-      document.getElementById('prodBarcode').value = '899' + Math.floor(100000000 + Math.random() * 900000000);
+      document.getElementById('prodBarcode').value = 'SKU' + Math.floor(100000 + Math.random() * 900000);
     });
 
     document.getElementById('formProduct').addEventListener('submit', (e) => {
       e.preventDefault();
       const id = document.getElementById('prodId').value || 'p_' + Date.now();
-      const barcode = document.getElementById('prodBarcode').value.trim();
+      let barcode = document.getElementById('prodBarcode').value.trim();
+      
+      // Auto-generate SKU if left blank
+      if (!barcode) {
+        barcode = 'SKU' + Date.now().toString().slice(-6);
+      }
+
       const name = document.getElementById('prodName').value.trim();
-      const category = document.getElementById('prodCategory').value;
+      const category = document.getElementById('prodCategory').value || (state.categories[0] || 'Umum');
       const costPrice = parseFloat(document.getElementById('prodCostPrice').value);
       const sellPrice = parseFloat(document.getElementById('prodSellPrice').value);
       const stock = parseInt(document.getElementById('prodStock').value);
@@ -536,17 +740,17 @@
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Tidak ada data barang elektronik ditemukan.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Tidak ada data barang ditemukan.</td></tr>`;
       return;
     }
 
     tbody.innerHTML = filtered.map(p => `
       <tr>
-        <td style="font-family: monospace; color: #38bdf8;">${p.barcode}</td>
+        <td style="font-family: monospace; color: var(--accent-pos); font-weight: 600;">${p.barcode}</td>
         <td style="font-weight: 600;">${p.name}</td>
         <td><span class="badge badge-info">${p.category}</span></td>
         <td>${formatRupiah(p.costPrice)}</td>
-        <td style="font-weight: 700; color: #34d399;">${formatRupiah(p.sellPrice)}</td>
+        <td style="font-weight: 700; color: var(--accent-wifi);">${formatRupiah(p.sellPrice)}</td>
         <td style="font-weight: 700;">${p.stock}</td>
         <td>
           ${p.stock <= 5 
@@ -554,8 +758,8 @@
             : `<span class="badge badge-success">Tersedia</span>`}
         </td>
         <td style="text-align: right;">
-          <button class="btn btn-sm btn-secondary btn-edit-prod" data-id="${p.id}"><i class="fa-solid fa-pen"></i></button>
-          <button class="btn btn-sm btn-danger btn-del-prod" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button>
+          <button class="btn btn-sm btn-secondary btn-edit-prod" data-id="${p.id}" title="Edit Barang"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-sm btn-danger btn-del-prod" data-id="${p.id}" title="Hapus Barang"><i class="fa-solid fa-trash"></i></button>
         </td>
       </tr>
     `).join('');
@@ -566,6 +770,7 @@
         const id = btn.getAttribute('data-id');
         const prod = state.products.find(p => p.id === id);
         if (prod) {
+          renderCategoryDropdowns();
           document.getElementById('prodId').value = prod.id;
           document.getElementById('prodBarcode').value = prod.barcode;
           document.getElementById('prodName').value = prod.name;
@@ -573,7 +778,7 @@
           document.getElementById('prodCostPrice').value = prod.costPrice;
           document.getElementById('prodSellPrice').value = prod.sellPrice;
           document.getElementById('prodStock').value = prod.stock;
-          document.getElementById('modalProductTitle').textContent = 'Edit Barang Elektronik';
+          document.getElementById('modalProductTitle').textContent = 'Edit Barang';
           openModal('modalProduct');
         }
       });
@@ -1532,6 +1737,8 @@
     loadData();
     initAuth();
     initNavigation();
+    initCategoryManagement();
+    renderCategoryDropdowns();
     initProductManagement();
     initPosCashier();
     initRekapPos();

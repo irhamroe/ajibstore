@@ -146,9 +146,10 @@
     if (!state.currentUser) return;
 
     const user = state.currentUser;
-    document.getElementById('userNameText').textContent = user.name;
-    document.getElementById('userRoleText').textContent = user.role === 'admin' ? 'Administrator (Full Access)' : 'Kasir (Restricted)';
-    document.getElementById('userAvatarText').textContent = user.role === 'admin' ? 'A' : 'K';
+    const userNameEl = document.getElementById('userNameText');
+    if (userNameEl) userNameEl.textContent = user.name;
+    const userAvatarEl = document.getElementById('userAvatarText');
+    if (userAvatarEl) userAvatarEl.textContent = user.role === 'admin' ? 'A' : 'K';
 
     const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
 

@@ -576,13 +576,29 @@
           </div>
           <div class="form-group">
             <label class="form-label">Nama Barang</label>
-            <input type="text" id="prodName" class="form-control" placeholder="Contoh: Router Wifi TP-Link Archer C6" required>
+            <input type="text" id="prodName" class="form-control" placeholder="Contoh: Lampu Led 10 Watt" required>
           </div>
           <div class="form-group">
             <label class="form-label">Kategori</label>
             <select id="prodCategory" class="form-control" required>
               <!-- Populated dynamically -->
             </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Foto / Gambar Produk <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal;">(Opsional)</span></label>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <div id="prodImagePreviewBox" style="width: 58px; height: 58px; border-radius: var(--radius-sm); border: 1px dashed var(--border-strong); background: var(--bg-muted); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+                <i class="fa-solid fa-image" style="font-size: 1.4rem; color: var(--text-dim);" id="prodImagePlaceholderIcon"></i>
+                <img id="prodImagePreview" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+              </div>
+              <div style="flex: 1;">
+                <input type="file" id="prodImageInput" class="form-control" accept="image/*" style="font-size: 0.82rem; padding: 7px 10px;">
+                <input type="hidden" id="prodImageBase64" value="">
+                <button type="button" class="btn btn-sm btn-secondary" id="btnRemoveProdImage" style="margin-top: 6px; display: none; font-size: 0.75rem; padding: 3px 8px;">
+                  <i class="fa-solid fa-trash"></i> Hapus Foto
+                </button>
+              </div>
+            </div>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
             <div class="form-group">

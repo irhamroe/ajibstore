@@ -681,10 +681,64 @@
   // 4. Products Management (Stok Barang)
   // ==========================================
   function initProductManagement() {
+    const prodImgInput = document.getElementById('prodImageInput');
+    const prodImgPreview = document.getElementById('prodImagePreview');
+    const prodImgPlaceholder = document.getElementById('prodImagePlaceholderIcon');
+    const prodImgBase64 = document.getElementById('prodImageBase64');
+    const btnRemoveImg = document.getElementById('btnRemoveProdImage');
+
+    function resetProdImage() {
+      if (prodImgInput) prodImgInput.value = '';
+      if (prodImgBase64) prodImgBase64.value = '';
+      if (prodImgPreview) {
+        prodImgPreview.src = '';
+        prodImgPreview.style.display = 'none';
+      }
+      if (prodImgPlaceholder) prodImgPlaceholder.style.display = 'block';
+      if (btnRemoveImg) btnRemoveImg.style.display = 'none';
+    }
+
+    function setProdImagePreview(src) {
+      if (src) {
+        if (prodImgBase64) prodImgBase64.value = src;
+        if (prodImgPreview) {
+          prodImgPreview.src = src;
+          prodImgPreview.style.display = 'block';
+        }
+        if (prodImgPlaceholder) prodImgPlaceholder.style.display = 'none';
+        if (btnRemoveImg) btnRemoveImg.style.display = 'inline-flex';
+      } else {
+        resetProdImage();
+      }
+    }
+
+    if (prodImgInput) {
+      prodImgInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran foto terlalu besar! Maksimal 2MB.');
+            prodImgInput.value = '';
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            setProdImagePreview(evt.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    if (btnRemoveImg) {
+      btnRemoveImg.addEventListener('click', resetProdImage);
+    }
+
     document.getElementById('btnOpenAddProduct').addEventListener('click', () => {
       document.getElementById('formProduct').reset();
       document.getElementById('prodId').value = '';
       document.getElementById('modalProductTitle').textContent = 'Tambah Barang';
+      resetProdImage();
       renderCategoryDropdowns();
       openModal('modalProduct');
     });
@@ -708,9 +762,10 @@
       const costPrice = parseFloat(document.getElementById('prodCostPrice').value);
       const sellPrice = parseFloat(document.getElementById('prodSellPrice').value);
       const stock = parseInt(document.getElementById('prodStock').value);
+      const image = prodImgBase64 ? prodImgBase64.value : '';
 
       const existingIndex = state.products.findIndex(p => p.id === id);
-      const productObj = { id, barcode, name, category, costPrice, sellPrice, stock };
+      const productObj = { id, barcode, name, category, costPrice, sellPrice, stock, image };
 
       if (existingIndex >= 0) {
         state.products[existingIndex] = productObj;
@@ -726,6 +781,9 @@
 
     document.getElementById('searchProductInput').addEventListener('input', renderProductTable);
     document.getElementById('filterProductCategory').addEventListener('change', renderProductTable);
+
+    // Edit Product Click Handler
+    window.setProductImageHelper = setProdImagePreview;
   }
 
   function renderProductTable() {
@@ -779,6 +837,9 @@
           document.getElementById('prodSellPrice').value = prod.sellPrice;
           document.getElementById('prodStock').value = prod.stock;
           document.getElementById('modalProductTitle').textContent = 'Edit Barang';
+          if (window.setProductImageHelper) {
+            window.setProductImageHelper(prod.image || '');
+          }
           openModal('modalProduct');
         }
       });
@@ -923,7 +984,7 @@
     grid.innerHTML = filtered.map(p => `
       <div class="product-item-card" data-id="${p.id}">
         <div class="prod-img-box">
-          <i class="fa-solid fa-microchip"></i>
+          ${p.image ? `<img src="${p.image}" alt="${p.name}">` : `<i class="fa-solid fa-box-open"></i>`}
         </div>
         <div class="prod-title">${p.name}</div>
         <div class="prod-barcode-code"><i class="fa-solid fa-barcode"></i> ${p.barcode}</div>

@@ -4,3 +4,11 @@
 Thumbs.db
 .idea/
 .vscode/
+
+# Dependencies
+node_modules/
+
+# Local Database files
+*.db
+*.sqlite
+*.sqlite3

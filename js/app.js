@@ -64,6 +64,142 @@
     currentUser: null
   };
 
+  // ==========================================
+  // 1B. API Client for SQLite Synchronization
+  // ==========================================
+  const API = {
+    isServer: window.location.protocol.startsWith('http'),
+
+    async fetchAll() {
+      if (!this.isServer) return null;
+      try {
+        const [prods, cats, custs, posTx, wifiTx, users] = await Promise.all([
+          fetch('/api/products').then(r => r.json()),
+          fetch('/api/categories').then(r => r.json()),
+          fetch('/api/customers').then(r => r.json()),
+          fetch('/api/pos-transactions').then(r => r.json()),
+          fetch('/api/wifi-transactions').then(r => r.json()),
+          fetch('/api/users').then(r => r.json())
+        ]);
+        return {
+          products: prods.success ? prods.data : null,
+          categories: cats.success ? cats.data : null,
+          customers: custs.success ? custs.data : null,
+          posTx: posTx.success ? posTx.data : null,
+          wifiTx: wifiTx.success ? wifiTx.data : null,
+          users: users.success ? users.data : null
+        };
+      } catch (err) {
+        return null;
+      }
+    },
+
+    async saveProduct(product) {
+      if (!this.isServer) return;
+      try {
+        await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(product)
+        });
+      } catch (e) { console.error('API saveProduct error:', e); }
+    },
+
+    async deleteProduct(id) {
+      if (!this.isServer) return;
+      try {
+        await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      } catch (e) { console.error('API deleteProduct error:', e); }
+    },
+
+    async addCategory(name) {
+      if (!this.isServer) return;
+      try {
+        await fetch('/api/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+      } catch (e) { console.error('API addCategory error:', e); }
+    },
+
+    async updateCategory(oldName, newName) {
+      if (!this.isServer) return;
+      try {
+        await fetch('/api/categories', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ oldName, newName })
+        });
+      } catch (e) { console.error('API updateCategory error:', e); }
+    },
+
+    async deleteCategory(name) {
+      if (!this.isServer) return;
+      try {
+        await fetch(`/api/categories/${encodeURIComponent(name)}`, { method: 'DELETE' });
+      } catch (e) { console.error('API deleteCategory error:', e); }
+    },
+
+    async saveCustomer(customer) {
+      if (!this.isServer) return;
+      try {
+        await fetch('/api/customers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(customer)
+        });
+      } catch (e) { console.error('API saveCustomer error:', e); }
+    },
+
+    async deleteCustomer(id) {
+      if (!this.isServer) return;
+      try {
+        await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+      } catch (e) { console.error('API deleteCustomer error:', e); }
+    },
+
+    async savePosTransaction(tx) {
+      if (!this.isServer) return;
+      try {
+        await fetch('/api/pos-transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tx)
+        });
+      } catch (e) { console.error('API savePosTransaction error:', e); }
+    },
+
+    async saveWifiTransaction(tx) {
+      if (!this.isServer) return;
+      try {
+        await fetch('/api/wifi-transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tx)
+        });
+      } catch (e) { console.error('API saveWifiTransaction error:', e); }
+    },
+
+    async saveUser(user) {
+      if (!this.isServer) return;
+      try {
+        await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user)
+        });
+      } catch (e) { console.error('API saveUser error:', e); }
+    },
+
+    async deleteUser(id) {
+      if (!this.isServer) return;
+      try {
+        await fetch(`/api/users/${id}`, { method: 'DELETE' });
+      } catch (e) { console.error('API deleteUser error:', e); }
+    }
+  };
+
   // Helper Functions
   function loadData() {
     state.products = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRODUCTS)) || DEFAULT_PRODUCTS;
@@ -85,6 +221,33 @@
     // Seed dummy transactions if empty for demonstration
     if (state.posTx.length === 0) {
       seedDemoTransactions();
+    }
+  }
+
+  async function syncWithServer(renderAfter = true) {
+    const data = await API.fetchAll();
+    if (data) {
+      let changed = false;
+      if (data.products) { state.products = data.products; changed = true; }
+      if (data.categories) { state.categories = data.categories; changed = true; }
+      if (data.customers) { state.customers = data.customers; changed = true; }
+      if (data.posTx) { state.posTx = data.posTx; changed = true; }
+      if (data.wifiTx) { state.wifiTx = data.wifiTx; changed = true; }
+      if (data.users) { state.users = data.users; changed = true; }
+
+      if (changed) {
+        saveData(STORAGE_KEYS.PRODUCTS);
+        saveData(STORAGE_KEYS.CATEGORIES);
+        saveData(STORAGE_KEYS.CUSTOMERS);
+        saveData(STORAGE_KEYS.POS_TX);
+        saveData(STORAGE_KEYS.WIFI_TX);
+        saveData(STORAGE_KEYS.USERS_LIST);
+
+        if (renderAfter) {
+          renderCategoryDropdowns();
+          renderTabViews(state.activeTab);
+        }
+      }
     }
   }
 
@@ -535,6 +698,7 @@
           });
           saveData(STORAGE_KEYS.PRODUCTS);
           saveData(STORAGE_KEYS.CATEGORIES);
+          API.updateCategory(oldName, newName);
 
           alert(`Kategori "${oldName}" berhasil diubah menjadi "${newName}".`);
         } else {
@@ -547,6 +711,7 @@
 
           state.categories.push(newName);
           saveData(STORAGE_KEYS.CATEGORIES);
+          API.addCategory(newName);
         }
 
         resetCategoryForm();
@@ -627,6 +792,7 @@
             saveData(STORAGE_KEYS.PRODUCTS);
           }
           saveData(STORAGE_KEYS.CATEGORIES);
+          API.deleteCategory(catName);
 
           renderCategoryTable();
           renderCategoryDropdowns();
@@ -774,6 +940,7 @@
       }
 
       saveData(STORAGE_KEYS.PRODUCTS);
+      API.saveProduct(productObj);
       closeModal('modalProduct');
       renderProductTable();
       renderPosProducts();
@@ -851,6 +1018,7 @@
         if (confirm('Yakin ingin menghapus barang ini dari stok?')) {
           state.products = state.products.filter(p => p.id !== id);
           saveData(STORAGE_KEYS.PRODUCTS);
+          API.deleteProduct(id);
           renderProductTable();
           renderPosProducts();
         }
@@ -1150,6 +1318,7 @@
 
     state.posTx.unshift(transaction);
     saveData(STORAGE_KEYS.POS_TX);
+    API.savePosTransaction(transaction);
 
     // Reset Cart & Close Modal
     state.cart = [];
@@ -1357,6 +1526,7 @@
             }
 
             saveData(STORAGE_KEYS.USERS_LIST);
+            API.saveUser(state.users[userIdx]);
             closeModal('modalUser');
             renderUserTable();
             alert(`Data user '${username}' berhasil diperbarui!`);
@@ -1380,6 +1550,7 @@
 
           state.users.push(newUser);
           saveData(STORAGE_KEYS.USERS_LIST);
+          API.saveUser(newUser);
           closeModal('modalUser');
           renderUserTable();
           alert(`User baru '${username}' dengan role ${role.toUpperCase()} berhasil ditambahkan!`);
@@ -1438,6 +1609,7 @@
           if (confirm(`Yakin ingin menghapus user '${user.username}' (${user.name})?`)) {
             state.users = state.users.filter(u => u.id !== id);
             saveData(STORAGE_KEYS.USERS_LIST);
+            API.deleteUser(id);
             renderUserTable();
           }
         }
@@ -1477,6 +1649,7 @@
       }
 
       saveData(STORAGE_KEYS.CUSTOMERS);
+      API.saveCustomer(custObj);
       closeModal('modalCustomer');
       renderWifiCustomers();
     });
@@ -1555,6 +1728,7 @@
         if (confirm('Hapus pelanggan Ajib.Net ini?')) {
           state.customers = state.customers.filter(item => item.id !== id);
           saveData(STORAGE_KEYS.CUSTOMERS);
+          API.deleteCustomer(id);
           renderWifiCustomers();
         }
       });
@@ -1605,7 +1779,9 @@
 
       state.wifiTx.unshift(tx);
       saveData(STORAGE_KEYS.WIFI_TX);
+      API.saveWifiTransaction(tx);
 
+      // Reset Form & Show Receipt
       document.getElementById('formPayWifi').reset();
       document.getElementById('wifiCustomerDetailCard').style.display = 'none';
       document.getElementById('payWifiMonth').value = defaultMonth;
@@ -1810,6 +1986,18 @@
 
     // Default Render Dashboard
     renderDashboard();
+
+    // Sync with SQLite backend
+    syncWithServer(true);
+
+    // Auto-sync polling every 3.5 seconds
+    setInterval(() => {
+      syncWithServer(true);
+    }, 3500);
+
+    window.addEventListener('focus', () => {
+      syncWithServer(true);
+    });
   });
 
 })();

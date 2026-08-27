@@ -344,7 +344,7 @@
 
     // Update Title
     const titleMap = {
-      'dashboard': 'Ajib Store',
+      'dashboard': 'Dashboard',
       'stok-barang': 'Kelola Stok Barang Elektronik',
       'kasir-pos': 'Kasir Toko',
       'rekap-pos': 'Rekap Transaksi Toko',

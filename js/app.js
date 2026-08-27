@@ -483,32 +483,50 @@
         closeModal(modalId);
       });
     });
-    // Barcode Scanner Button
+    // Helper function for camera barcode scanner
+    function launchScanner(onScanSuccess) {
+      openModal('modalCameraScanner');
+      if (!state.html5QrcodeScanner) {
+        state.html5QrcodeScanner = new Html5Qrcode('reader');
+      }
+      const config = { fps: 10, qrbox: 250 };
+      state.html5QrcodeScanner.start(
+        { facingMode: 'environment' },
+        config,
+        decodedText => {
+          onScanSuccess(decodedText);
+          state.html5QrcodeScanner.stop().then(() => {
+            closeModal('modalCameraScanner');
+          }).catch(err => console.error('Stop scanner error:', err));
+        },
+        errorMessage => {
+          // Scanner frame error, ignore
+        }
+      ).catch(err => console.error('Start scanner error:', err));
+    }
+
+    // Barcode Scanner Button (Product Modal - Tambah Barang)
     const btnScanBarcode = document.getElementById('btnScanBarcode');
     if (btnScanBarcode) {
       btnScanBarcode.addEventListener('click', () => {
-        // Open scanner modal
-        openModal('modalCameraScanner');
-        // Initialize scanner if not already
-        if (!state.html5QrcodeScanner) {
-          state.html5QrcodeScanner = new Html5Qrcode('reader');
-        }
-        const config = { fps: 10, qrbox: 250 };
-        state.html5QrcodeScanner.start(
-          { facingMode: 'environment' },
-          config,
-          decodedText => {
-            // Fill barcode input and close scanner
-            const barcodeInput = document.getElementById('prodBarcode');
-            if (barcodeInput) barcodeInput.value = decodedText;
-            state.html5QrcodeScanner.stop().then(() => {
-              closeModal('modalCameraScanner');
-            }).catch(err => console.error('Stop scanner error:', err));
-          },
-          errorMessage => {
-            // console.log('QR Code scan error:', errorMessage);
+        launchScanner(decodedText => {
+          const barcodeInput = document.getElementById('prodBarcode');
+          if (barcodeInput) barcodeInput.value = decodedText;
+        });
+      });
+    }
+
+    // Barcode Scanner Button (Kasir POS)
+    const btnScanBarcodeCamera = document.getElementById('btnScanBarcodeCamera');
+    if (btnScanBarcodeCamera) {
+      btnScanBarcodeCamera.addEventListener('click', () => {
+        launchScanner(decodedText => {
+          const posSearch = document.getElementById('posSearchProduct');
+          if (posSearch) {
+            posSearch.value = decodedText;
+            posSearch.dispatchEvent(new Event('input'));
           }
-        ).catch(err => console.error('Start scanner error:', err));
+        });
       });
     }
     // Live Clock

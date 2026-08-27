@@ -263,10 +263,21 @@
     const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
     const mobileToggle = document.getElementById('mobileToggle');
     const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
 
+    // Toggle sidebar open/close
     mobileToggle.addEventListener('click', () => {
       sidebar.classList.toggle('mobile-open');
+      sidebarOverlay.classList.toggle('visible');
     });
+
+    // Close sidebar by tapping overlay
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+        sidebarOverlay.classList.remove('visible');
+      });
+    }
 
     navItems.forEach(item => {
       item.addEventListener('click', (e) => {
@@ -274,8 +285,10 @@
         const tabTarget = item.getAttribute('data-tab');
         switchTab(tabTarget);
 
+        // Always close sidebar on mobile after navigation
         if (window.innerWidth <= 768) {
           sidebar.classList.remove('mobile-open');
+          sidebarOverlay.classList.remove('visible');
         }
       });
     });
@@ -398,9 +411,9 @@
       lowStockContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px;">Semua stok barang aman (>5)</div>`;
     } else {
       lowStockContainer.innerHTML = lowStockItems.map(p => `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 10px 14px; border-radius: var(--radius-md);">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--accent-danger-light); border: 1px solid #fca5a5; padding: 10px 14px; border-radius: var(--radius-md);">
           <div>
-            <div style="font-weight: 600; font-size: 0.88rem; color: #fff;">${p.name}</div>
+            <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);">${p.name}</div>
             <div style="font-size: 0.75rem; color: var(--text-muted);">Barcode: ${p.barcode}</div>
           </div>
           <div class="badge badge-danger">Stok: ${p.stock} Pcs</div>
@@ -442,10 +455,10 @@
         datasets: [{
           label: 'Omset Penjualan (Rp)',
           data: salesData,
-          backgroundColor: 'rgba(59, 130, 246, 0.65)',
-          borderColor: '#3b82f6',
-          borderWidth: 2,
-          borderRadius: 6
+          backgroundColor: 'rgba(37, 99, 235, 0.75)',
+          borderColor: '#2563eb',
+          borderWidth: 1.5,
+          borderRadius: 8
         }]
       },
       options: {
@@ -456,12 +469,12 @@
         },
         scales: {
           x: {
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            ticks: { color: '#9ca3af' }
+            grid: { color: '#f1f5f9' },
+            ticks: { color: '#64748b', font: { family: 'Inter' } }
           },
           y: {
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            ticks: { color: '#9ca3af' }
+            grid: { color: '#f1f5f9' },
+            ticks: { color: '#64748b', font: { family: 'Inter' } }
           }
         }
       }

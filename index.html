@@ -74,6 +74,9 @@
       </div>
     </aside>
 
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Main Wrapper -->
     <div class="main-wrapper">
       <!-- Top Header Bar -->
@@ -147,7 +150,7 @@
           <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
             <div class="glass-card">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
-                <h3><i class="fa-solid fa-chart-area" style="color: #38bdf8;"></i> Grafik Penjualan POS (7 Hari Terakhir)</h3>
+                <h3><i class="fa-solid fa-chart-area" style="color: var(--accent-pos);"></i> Grafik Penjualan POS (7 Hari Terakhir)</h3>
               </div>
               <div style="position: relative; height: 300px;">
                 <canvas id="dashboardChart"></canvas>
@@ -155,7 +158,7 @@
             </div>
 
             <div class="glass-card">
-              <h3 style="margin-bottom: 16px;"><i class="fa-solid fa-triangle-exclamation" style="color: #fbbf24;"></i> Peringatan Stok Menipis</h3>
+              <h3 style="margin-bottom: 16px;"><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-warning);"></i> Peringatan Stok Menipis</h3>
               <div id="lowStockList" style="display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto;">
                 <!-- Dynamically populated low stock products -->
               </div>
@@ -245,8 +248,8 @@
 
             <!-- Right Side: Cart Panel -->
             <div class="glass-card pos-cart-panel">
-              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 12px;">
-                <h3><i class="fa-solid fa-cart-shopping" style="color: #38bdf8;"></i> Keranjang Belanja</h3>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                <h3><i class="fa-solid fa-cart-shopping" style="color: var(--accent-pos);"></i> Keranjang Belanja</h3>
                 <button class="btn btn-sm btn-danger" id="btnClearCart"><i class="fa-solid fa-trash"></i> Reset</button>
               </div>
 
@@ -342,7 +345,7 @@
           <div class="glass-card" style="margin-bottom: 24px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
               <div>
-                <h3 style="color: #fff;"><i class="fa-solid fa-users-gear" style="color: #38bdf8;"></i> Kelola Pengguna Aplikasi</h3>
+                <h3 style="color: var(--text-main);"><i class="fa-solid fa-users-gear" style="color: var(--accent-pos);"></i> Kelola Pengguna Aplikasi</h3>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Tambah atau hapus akun pengguna yang dapat mengakses aplikasi Ajib Store.</p>
               </div>
 
@@ -415,7 +418,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
             <!-- Payment Form -->
             <div class="glass-card">
-              <h3 style="margin-bottom: 20px; color: #10b981;"><i class="fa-solid fa-wallet"></i> Form Pembayaran Wifi Ajib.Net</h3>
+              <h3 style="margin-bottom: 20px; color: var(--accent-wifi);"><i class="fa-solid fa-wallet"></i> Form Pembayaran Wifi Ajib.Net</h3>
               <form id="formPayWifi">
                 <div class="form-group">
                   <label class="form-label">Pilih Pelanggan Ajib.Net</label>
@@ -425,12 +428,12 @@
                 </div>
 
                 <!-- Customer Quick Detail Display -->
-                <div id="wifiCustomerDetailCard" style="background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: var(--radius-md); padding: 16px; margin-bottom: 18px; display: none;">
-                  <div style="font-size: 0.95rem; font-weight: 700; color: #fff;" id="detailCustName">-</div>
+                <div id="wifiCustomerDetailCard" style="background: var(--accent-wifi-light); border: 1px dashed #6ee7b7; border-radius: var(--radius-md); padding: 16px; margin-bottom: 18px; display: none;">
+                  <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);" id="detailCustName">-</div>
                   <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;" id="detailCustAddress">-</div>
                   <div style="display: flex; gap: 16px; margin-top: 10px; font-size: 0.85rem;">
-                    <div>Bandwidth: <strong id="detailCustBw" style="color: #34d399;">-</strong></div>
-                    <div>Nominal: <strong id="detailCustNominal" style="color: #38bdf8;">-</strong></div>
+                    <div>Bandwidth: <strong id="detailCustBw" style="color: var(--accent-wifi);">-</strong></div>
+                    <div>Nominal: <strong id="detailCustNominal" style="color: var(--accent-pos);">-</strong></div>
                   </div>
                 </div>
 
@@ -616,9 +619,9 @@
         <button class="modal-close-btn closeModalBtn" data-modal="modalCheckout">&times;</button>
       </div>
       <div class="modal-body">
-        <div style="background: rgba(15, 23, 42, 0.7); padding: 16px; border-radius: var(--radius-md); text-align: center; margin-bottom: 20px;">
+        <div style="background: var(--bg-muted); padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); text-align: center; margin-bottom: 20px;">
           <span style="font-size: 0.85rem; color: var(--text-muted);">Total Tagihan</span>
-          <div style="font-size: 2rem; font-weight: 800; color: #38bdf8;" id="checkoutTotalDisplay">Rp 0</div>
+          <div style="font-size: 2rem; font-weight: 800; color: var(--accent-pos);" id="checkoutTotalDisplay">Rp 0</div>
         </div>
 
         <div class="form-group">
@@ -631,9 +634,9 @@
           <!-- Populated dynamically -->
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.5); padding: 12px 16px; border-radius: var(--radius-md);">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-muted); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: var(--radius-md);">
           <span style="font-weight: 600; color: var(--text-muted);">Kembalian:</span>
-          <span style="font-size: 1.25rem; font-weight: 800; color: #34d399;" id="checkoutChangeDisplay">Rp 0</span>
+          <span style="font-size: 1.25rem; font-weight: 800; color: var(--accent-wifi);" id="checkoutChangeDisplay">Rp 0</span>
         </div>
       </div>
       <div class="modal-footer">
@@ -768,7 +771,7 @@
       <div class="login-brand-logo">
         <i class="fa-solid fa-bolt"></i>
       </div>
-      <h2 style="color: #fff; font-weight: 800; margin-bottom: 4px;">Ajib Store & Ajib.Net</h2>
+      <h2 style="color: var(--text-main); font-weight: 800; margin-bottom: 4px;">Ajib Store & Ajib.Net</h2>
       <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Silakan login untuk mengakses sistem POS</p>
 
       <form id="formLogin">

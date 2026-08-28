@@ -138,10 +138,70 @@
     };
   }
 
-  function notifyBroadcastSync() {
-    if (syncChannel) {
-      try { syncChannel.postMessage('sync'); } catch (e) {}
-    }
+  async function pushToVercelSync() {
+    try {
+      const payload = {
+        products: state.products,
+        categories: state.categories,
+        customers: state.customers,
+        posTx: state.posTx,
+        wifiTx: state.wifiTx,
+        users: state.users,
+        updatedAt: Date.now()
+      };
+      await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {}
+  }
+
+  async function pullFromVercelSync(renderAfter = true) {
+    try {
+      const res = await fetch('/api/sync');
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json && json.success && json.data) {
+        const cloudData = json.data;
+        let changed = false;
+
+        if (cloudData.products && JSON.stringify(state.products) !== JSON.stringify(cloudData.products)) {
+          state.products = cloudData.products;
+          changed = true;
+        }
+        if (cloudData.categories && JSON.stringify(state.categories) !== JSON.stringify(cloudData.categories)) {
+          state.categories = cloudData.categories;
+          changed = true;
+        }
+        if (cloudData.customers && JSON.stringify(state.customers) !== JSON.stringify(cloudData.customers)) {
+          state.customers = cloudData.customers;
+          changed = true;
+        }
+        if (cloudData.posTx && JSON.stringify(state.posTx) !== JSON.stringify(cloudData.posTx)) {
+          state.posTx = cloudData.posTx;
+          changed = true;
+        }
+        if (cloudData.wifiTx && JSON.stringify(state.wifiTx) !== JSON.stringify(cloudData.wifiTx)) {
+          state.wifiTx = cloudData.wifiTx;
+          changed = true;
+        }
+
+        if (changed) {
+          saveDataLocally(STORAGE_KEYS.PRODUCTS);
+          saveDataLocally(STORAGE_KEYS.CATEGORIES);
+          saveDataLocally(STORAGE_KEYS.CUSTOMERS);
+          saveDataLocally(STORAGE_KEYS.POS_TX);
+          saveDataLocally(STORAGE_KEYS.WIFI_TX);
+          saveDataLocally(STORAGE_KEYS.USERS_LIST);
+
+          if (renderAfter) {
+            renderCategoryDropdowns();
+            renderTabViews(state.activeTab);
+          }
+        }
+      }
+    } catch (e) {}
   }
 
   function pushToFirebase() {
@@ -451,10 +511,25 @@
           </div>
         </div>
 
-        <div style="font-size: 0.85rem; color: #334155; line-height: 1.6;">
-          <strong>Informasi Akses:</strong><br>
-          Buka <strong>https://ajibstore.vercel.app</strong> dari perangkat mana saja (HP, Laptop, Tablet). Tambahkan barang dari laptop dan barang akan otomatis muncul di HP!
+        <hr style="margin: 16px 0; border: none; border-top: 1px dashed #cbd5e1;">
+
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #1e293b;">Transfer Instant Data HP & Laptop (1-Klik):</h4>
+        <p style="font-size: 0.82rem; color: #475569; margin-bottom: 10px;">
+          Salin kode sinkronisasi dari Laptop dan tempel di HP Anda untuk menyalin seluruh stok barang secara instan:
+        </p>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+          <button type="button" class="btn btn-secondary" id="btnExportSyncToken" style="flex: 1;">
+            <i class="fa-solid fa-copy"></i> Salin Data Laptop
+          </button>
         </div>
+
+        <div class="form-group" style="margin-bottom: 8px;">
+          <input type="text" id="inputImportSyncToken" class="form-control" placeholder="Tempel kode sync dari laptop di sini...">
+        </div>
+        <button type="button" class="btn btn-primary" id="btnImportSyncToken" style="width: 100%;">
+          <i class="fa-solid fa-download"></i> Terapkan Data ke HP Ini
+        </button>
       `;
     } else if (serverInfoData && serverInfoData.isServer) {
       const port = serverInfoData.port || 3000;
@@ -530,6 +605,69 @@
       `;
     }
 
+    // Attach Export Sync Token Handler
+    const btnExport = document.getElementById('btnExportSyncToken');
+    if (btnExport) {
+      btnExport.addEventListener('click', () => {
+        const payload = {
+          products: state.products,
+          categories: state.categories,
+          customers: state.customers,
+          posTx: state.posTx,
+          wifiTx: state.wifiTx,
+          users: state.users,
+          v: 1
+        };
+        const token = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+        navigator.clipboard.writeText(token).then(() => {
+          alert('Kode data sinkronisasi laptop berhasil disalin ke clipboard! Kirim kode ini ke WA/Chat HP Anda, lalu tempel pada HP.');
+        }).catch(() => {
+          prompt('Salin Kode Sync berikut dan tempelkan di HP:', token);
+        });
+      });
+    }
+
+    // Attach Import Sync Token Handler
+    const btnImport = document.getElementById('btnImportSyncToken');
+    if (btnImport) {
+      btnImport.addEventListener('click', () => {
+        const input = document.getElementById('inputImportSyncToken').value.trim();
+        if (!input) {
+          alert('Masukkan atau tempel kode data sync terlebih dahulu!');
+          return;
+        }
+        try {
+          const jsonStr = decodeURIComponent(escape(atob(input)));
+          const payload = JSON.parse(jsonStr);
+
+          if (payload && payload.products) {
+            state.products = payload.products;
+            if (payload.categories) state.categories = payload.categories;
+            if (payload.customers) state.customers = payload.customers;
+            if (payload.posTx) state.posTx = payload.posTx;
+            if (payload.wifiTx) state.wifiTx = payload.wifiTx;
+            if (payload.users) state.users = payload.users;
+
+            saveData(STORAGE_KEYS.PRODUCTS);
+            saveData(STORAGE_KEYS.CATEGORIES);
+            saveData(STORAGE_KEYS.CUSTOMERS);
+            saveData(STORAGE_KEYS.POS_TX);
+            saveData(STORAGE_KEYS.WIFI_TX);
+            saveData(STORAGE_KEYS.USERS_LIST);
+
+            renderCategoryDropdowns();
+            renderTabViews(state.activeTab);
+            closeModal('modalServerInfo');
+            alert('SELAMAT! Data barang di HP ini telah berhasil disinkronkan 100% sama dengan laptop!');
+          } else {
+            alert('Format kode sync tidak valid.');
+          }
+        } catch (e) {
+          alert('Gagal mengimpor kode sync! Pastikan kode disalin secara utuh.');
+        }
+      });
+    }
+
     // Attach Save Cloud URL Button Handler
     const btnSave = document.getElementById('btnSaveCloudUrl');
     if (btnSave) {
@@ -554,6 +692,7 @@
   }
 
   async function syncWithServer(renderAfter = true) {
+    await pullFromVercelSync(renderAfter);
     const data = await API.fetchAll();
     if (data) {
       let changed = false;
@@ -583,6 +722,7 @@
   function saveData(key) {
     saveDataLocally(key);
     pushToFirebase();
+    pushToVercelSync();
     notifyBroadcastSync();
   }
 

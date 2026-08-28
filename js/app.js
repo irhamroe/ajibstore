@@ -2285,7 +2285,7 @@
       costPrice: c.product.costPrice
     }));
 
-    // Deduct Product Stock & Push Sync
+    // 1. Deduct Product Stock & Push Sync to Firebase Cloud
     state.cart.forEach(c => {
       const prod = state.products.find(p => p.id === c.product.id);
       if (prod) {
@@ -2294,6 +2294,7 @@
     });
     saveData(STORAGE_KEYS.PRODUCTS);
 
+    // 2. Save POS Transaction to Firebase Cloud
     const transaction = {
       id: 'tx_' + Date.now(),
       receiptNo: receiptNo,
@@ -2307,20 +2308,20 @@
     };
 
     state.posTx.unshift(transaction);
-    state.lastPosTx = transaction;
     saveData(STORAGE_KEYS.POS_TX);
     API.savePosTransaction(transaction);
 
-    // Reset Cart & Close Checkout Modal
+    // 3. Render Receipt Paper
+    renderPosReceipt(transaction);
+
+    // 4. Reset Cart, Refresh Product Grid (Stok Berkurang) & Open Receipt Modal
     state.cart = [];
     if (cashInput) cashInput.value = '';
     renderCart();
     renderPosProducts();
     closeModal('modalCheckout');
-
-    // Display Printable Receipt Modal Directly
-    renderPosReceipt(transaction);
     openModal('modalPosReceipt');
+
     showToast(`Pembayaran ${formatRupiah(grandTotal)} berhasil! Kembalian: ${formatRupiah(change)}`, 'success', 4000);
   }
 

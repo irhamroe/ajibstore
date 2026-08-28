@@ -53,7 +53,8 @@
     activeTab: 'dashboard',
     posCategoryFilter: 'all',
     html5QrcodeScanner: null,
-    currentUser: null
+    currentUser: null,
+    isProcessingCheckout: false
   };
 
   // ==========================================
@@ -2132,65 +2133,84 @@
   }
 
   function executeCheckout() {
-    const grandTotal = calculateCartGrandTotal();
-    const cashInput = document.getElementById('checkoutCash');
-    const cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
+    if (state.isProcessingCheckout) return;
+    state.isProcessingCheckout = true;
 
-    if (cash < grandTotal) {
-      showToast('Nominal pembayaran kurang dari total tagihan!', 'error');
-      return;
-    }
+    try {
+      const grandTotal = calculateCartGrandTotal();
+      const cashInput = document.getElementById('checkoutCash');
+      const cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
 
-    const change = cash - grandTotal;
-    const now = new Date();
-    const receiptNo = 'INV/AJB/' + Date.now().toString().slice(-6);
-
-    const txItems = state.cart.map(c => ({
-      productId: c.product.id,
-      name: c.product.name,
-      qty: c.qty,
-      price: c.product.sellPrice,
-      costPrice: c.product.costPrice
-    }));
-
-    // 1. Deduct Product Stock & Push Sync to Firebase Cloud
-    state.cart.forEach(c => {
-      const prod = state.products.find(p => p.id === c.product.id);
-      if (prod) {
-        prod.stock = Math.max(0, prod.stock - c.qty);
+      if (cash < grandTotal) {
+        showToast('Nominal pembayaran kurang dari total tagihan!', 'error');
+        state.isProcessingCheckout = false;
+        return;
       }
-    });
-    saveData(STORAGE_KEYS.PRODUCTS);
 
-    // 2. Save POS Transaction to Firebase Cloud
-    const transaction = {
-      id: 'tx_' + Date.now(),
-      receiptNo: receiptNo,
-      timestamp: now.toISOString(),
-      dateStr: formatDateIso(now),
-      items: txItems,
-      subtotal: grandTotal,
-      total: grandTotal,
-      cash: cash,
-      change: change
-    };
+      if (!state.cart || state.cart.length === 0) {
+        showToast('Keranjang belanja kosong!', 'warning');
+        state.isProcessingCheckout = false;
+        return;
+      }
 
-    state.posTx.unshift(transaction);
-    saveData(STORAGE_KEYS.POS_TX);
-    API.savePosTransaction(transaction);
+      const change = cash - grandTotal;
+      const now = new Date();
+      const receiptNo = 'INV/AJB/' + Date.now().toString().slice(-6);
 
-    // 3. Render Receipt Paper
-    renderPosReceipt(transaction);
+      const txItems = state.cart.map(c => ({
+        productId: c.product.id,
+        name: c.product.name,
+        qty: c.qty,
+        price: c.product.sellPrice,
+        costPrice: c.product.costPrice
+      }));
 
-    // 4. Reset Cart, Refresh Product Grid (Stok Berkurang) & Open Receipt Modal
-    state.cart = [];
-    if (cashInput) cashInput.value = '';
-    renderCart();
-    renderPosProducts();
-    closeModal('modalCheckout');
-    openModal('modalPosReceipt');
+      // 1. Deduct Product Stock ONCE & Push Sync to Firebase Cloud
+      state.cart.forEach(c => {
+        const prod = state.products.find(p => p.id === c.product.id);
+        if (prod) {
+          prod.stock = Math.max(0, prod.stock - c.qty);
+        }
+      });
+      saveData(STORAGE_KEYS.PRODUCTS);
 
-    showToast(`Pembayaran ${formatRupiah(grandTotal)} berhasil! Kembalian: ${formatRupiah(change)}`, 'success', 4000);
+      // 2. Save POS Transaction to Firebase Cloud
+      const transaction = {
+        id: 'tx_' + Date.now(),
+        receiptNo: receiptNo,
+        timestamp: now.toISOString(),
+        dateStr: formatDateIso(now),
+        items: txItems,
+        subtotal: grandTotal,
+        total: grandTotal,
+        cash: cash,
+        change: change
+      };
+
+      state.posTx.unshift(transaction);
+      saveData(STORAGE_KEYS.POS_TX);
+      API.savePosTransaction(transaction);
+
+      // 3. Render Receipt Paper
+      renderPosReceipt(transaction);
+
+      // 4. Reset Cart, Refresh Product Grid (Stok Berkurang) & Open Receipt Modal
+      state.cart = [];
+      if (cashInput) cashInput.value = '';
+      renderCart();
+      renderPosProducts();
+      closeModal('modalCheckout');
+      openModal('modalPosReceipt');
+
+      showToast(`Pembayaran ${formatRupiah(grandTotal)} berhasil! Kembalian: ${formatRupiah(change)}`, 'success', 4000);
+    } catch (err) {
+      console.error('Checkout error:', err);
+      showToast('Gagal memproses pembayaran!', 'error');
+    } finally {
+      setTimeout(() => {
+        state.isProcessingCheckout = false;
+      }, 500);
+    }
   }
 
   // Expose global handlers for fail-proof inline onclick execution

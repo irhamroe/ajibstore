@@ -864,12 +864,11 @@ body {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 14px;
+  padding: 12px;
   cursor: pointer;
   transition: var(--transition-fast);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   position: relative;
   box-shadow: var(--shadow-sm);
 }
@@ -881,7 +880,7 @@ body {
 }
 
 .prod-img-box {
-  height: 135px;
+  height: 140px;
   border-radius: var(--radius-sm);
   background: var(--bg-muted);
   display: flex;
@@ -889,7 +888,7 @@ body {
   justify-content: center;
   font-size: 2.4rem;
   color: var(--accent-pos);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   overflow: hidden;
   position: relative;
 }
@@ -912,7 +911,7 @@ body {
   font-weight: 600;
   color: var(--text-main);
   line-height: 1.25;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -922,7 +921,7 @@ body {
 .prod-barcode-code {
   font-size: 0.7rem;
   color: var(--text-dim);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-family: monospace;
 }
 
@@ -930,8 +929,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: auto;
-  padding-top: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid var(--border-subtle);
 }
 

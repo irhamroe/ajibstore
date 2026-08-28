@@ -107,56 +107,32 @@
       firebaseDbRef = firebase.database().ref('ajibstore');
       isFirebaseSyncActive = true;
 
-      // Listen for real-time changes across devices via Firebase Realtime Cloud Database
+      // Single Source of Truth: Listen for real-time changes across all devices via Firebase Realtime Cloud
       firebaseDbRef.on('value', (snapshot) => {
         const val = snapshot.val();
-        let needsPushBack = false;
-
         if (val) {
-          const mergedProducts = mergeArraysById(state.products, val.products);
-          const mergedCategories = mergeUniqueCategories(state.categories, val.categories);
-          const mergedCustomers = mergeArraysById(state.customers, val.customers);
-          const mergedPosTx = mergeArraysById(state.posTx, val.posTx);
-          const mergedWifiTx = mergeArraysById(state.wifiTx, val.wifiTx);
-          const mergedUsers = mergeArraysById(state.users, val.users);
+          state.products = Array.isArray(val.products) ? val.products : [];
+          state.categories = Array.isArray(val.categories) ? val.categories : [];
+          state.customers = Array.isArray(val.customers) ? val.customers : [];
+          state.posTx = Array.isArray(val.posTx) ? val.posTx : [];
+          state.wifiTx = Array.isArray(val.wifiTx) ? val.wifiTx : [];
+          state.users = Array.isArray(val.users) ? val.users : [];
 
-          let changed = false;
-          if (JSON.stringify(state.products) !== JSON.stringify(mergedProducts)) { state.products = mergedProducts; changed = true; }
-          if (JSON.stringify(state.categories) !== JSON.stringify(mergedCategories)) { state.categories = mergedCategories; changed = true; }
-          if (JSON.stringify(state.customers) !== JSON.stringify(mergedCustomers)) { state.customers = mergedCustomers; changed = true; }
-          if (JSON.stringify(state.posTx) !== JSON.stringify(mergedPosTx)) { state.posTx = mergedPosTx; changed = true; }
-          if (JSON.stringify(state.wifiTx) !== JSON.stringify(mergedWifiTx)) { state.wifiTx = mergedWifiTx; changed = true; }
-          if (JSON.stringify(state.users) !== JSON.stringify(mergedUsers)) { state.users = mergedUsers; changed = true; }
+          saveDataLocally(STORAGE_KEYS.PRODUCTS);
+          saveDataLocally(STORAGE_KEYS.CATEGORIES);
+          saveDataLocally(STORAGE_KEYS.CUSTOMERS);
+          saveDataLocally(STORAGE_KEYS.POS_TX);
+          saveDataLocally(STORAGE_KEYS.WIFI_TX);
+          saveDataLocally(STORAGE_KEYS.USERS_LIST);
 
-          if (changed) {
-            saveDataLocally(STORAGE_KEYS.PRODUCTS);
-            saveDataLocally(STORAGE_KEYS.CATEGORIES);
-            saveDataLocally(STORAGE_KEYS.CUSTOMERS);
-            saveDataLocally(STORAGE_KEYS.POS_TX);
-            saveDataLocally(STORAGE_KEYS.WIFI_TX);
-            saveDataLocally(STORAGE_KEYS.USERS_LIST);
-
-            renderCategoryDropdowns();
-            renderTabViews(state.activeTab);
-          }
-
-          // If local device had items/transactions that cloud did not have yet, push merged state back to cloud!
-          const valPosCount = Array.isArray(val.posTx) ? val.posTx.length : 0;
-          const valWifiCount = Array.isArray(val.wifiTx) ? val.wifiTx.length : 0;
-          const valProdCount = Array.isArray(val.products) ? val.products.length : 0;
-
-          if (mergedPosTx.length > valPosCount ||
-              mergedWifiTx.length > valWifiCount ||
-              mergedProducts.length > valProdCount) {
-            needsPushBack = true;
-          }
+          renderCategoryDropdowns();
+          renderTabViews(state.activeTab);
         } else {
-          needsPushBack = true;
-        }
-
-        if (needsPushBack) {
+          // Push initial data if cloud database is completely empty
           pushToFirebase();
         }
+      }, (err) => {
+        console.error('Firebase sync error:', err);
       });
     } catch (e) {
       console.warn('Firebase sync error:', e);

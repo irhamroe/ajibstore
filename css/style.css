@@ -1410,27 +1410,54 @@ body {
     text-overflow: ellipsis;
   }
 
-  /* Glass Card padding */
+  /* Glass Card padding & container fix for mobile */
   .glass-card {
     padding: 14px;
     border-radius: var(--radius-md);
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+    overflow: visible;
+  }
+
+  /* Make header action rows inside cards wrap nicely on mobile */
+  .glass-card > div[style*="display: flex"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 12px !important;
+  }
+
+  .glass-card div[style*="max-width"],
+  .glass-card div[style*="min-width"],
+  .glass-card input[style*="width"],
+  .glass-card select[style*="width"] {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .glass-card > div > div[style*="display: flex"] {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 8px !important;
   }
 
   /* Filter Bar on Mobile */
   .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: column !important;
+    align-items: stretch !important;
     gap: 10px;
     padding: 14px;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .filter-group {
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    width: 100% !important;
   }
 
   .filter-group label {
@@ -1438,46 +1465,53 @@ body {
     margin-bottom: 4px;
   }
 
+  .filter-group input[type="date"],
+  .filter-group input[type="text"],
   .filter-bar .form-control {
     width: 100% !important;
+    max-width: 100% !important;
   }
 
   .filter-bar .btn {
-    width: 100%;
+    width: 100% !important;
     justify-content: center;
   }
 
-  /* Tables with smooth horizontal touch scroll */
+  /* Tables with smooth horizontal touch scroll across all tabs */
   .table-responsive {
     border-radius: var(--radius-sm);
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    display: block;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    display: block !important;
     -webkit-overflow-scrolling: touch;
+    margin-top: 8px;
   }
 
   .custom-table {
     width: 100%;
-    min-width: 480px;
+    min-width: 520px;
     font-size: 0.8rem;
   }
 
   .custom-table th,
   .custom-table td {
     padding: 8px 10px;
+    white-space: nowrap;
   }
 
   /* POS Cashier on Mobile */
   .pos-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     gap: 16px;
+    width: 100% !important;
   }
 
   .product-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     max-height: 440px;
-    gap: 10px;
+    gap: 8px;
+    width: 100% !important;
   }
 
   .prod-img-box {
@@ -1498,6 +1532,7 @@ body {
     -webkit-overflow-scrolling: touch;
     padding-bottom: 4px;
     flex-wrap: nowrap;
+    width: 100% !important;
   }
 
   #posCategoryPills button {
@@ -1513,6 +1548,7 @@ body {
   #tab-bayar-wifi > div,
   #tab-dashboard > div:last-child {
     grid-template-columns: 1fr !important;
+    width: 100% !important;
   }
 
   /* Modals: bottom-sheet on mobile */

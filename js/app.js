@@ -2085,18 +2085,6 @@
     if (btnConfirmCheckout) {
       btnConfirmCheckout.addEventListener('click', executeCheckout);
     }
-
-    // Success Modal Print Button Listener
-    const btnSuccessPrint = document.getElementById('btnSuccessPrintReceipt');
-    if (btnSuccessPrint) {
-      btnSuccessPrint.addEventListener('click', () => {
-        closeModal('modalPaymentSuccess');
-        if (state.lastPosTx) {
-          renderPosReceipt(state.lastPosTx);
-          openModal('modalPosReceipt');
-        }
-      });
-    }
   }
 
   function startCameraScanner() {
@@ -2330,19 +2318,10 @@
     renderPosProducts();
     closeModal('modalCheckout');
 
-    // Populate Success Modal Fields
-    const receiptEl = document.getElementById('successReceiptNo');
-    const totalEl = document.getElementById('successTotalAmount');
-    const cashEl = document.getElementById('successCashAmount');
-    const changeEl = document.getElementById('successChangeAmount');
-
-    if (receiptEl) receiptEl.textContent = transaction.receiptNo;
-    if (totalEl) totalEl.textContent = formatRupiah(grandTotal);
-    if (cashEl) cashEl.textContent = formatRupiah(cash);
-    if (changeEl) changeEl.textContent = formatRupiah(change);
-
-    openModal('modalPaymentSuccess');
-    showToast('Pembayaran berhasil diselesaikan!', 'success');
+    // Display Printable Receipt Modal Directly
+    renderPosReceipt(transaction);
+    openModal('modalPosReceipt');
+    showToast(`Pembayaran ${formatRupiah(grandTotal)} berhasil! Kembalian: ${formatRupiah(change)}`, 'success', 4000);
   }
 
   function renderPosReceipt(tx) {

@@ -125,85 +125,22 @@
     }
   }
 
-  const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff8081819ff5b11001a04644a54b3f7f';
-  let isCloudSyncing = false;
+  // BroadcastChannel for instant cross-tab sync on same device
+  const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ajibstore_broadcast_sync') : null;
 
-  async function pushToCloudSync() {
-    if (isCloudSyncing) return;
-    isCloudSyncing = true;
-    try {
-      const payload = {
-        name: 'ajibstore_sync',
-        data: {
-          products: state.products,
-          categories: state.categories,
-          customers: state.customers,
-          posTx: state.posTx,
-          wifiTx: state.wifiTx,
-          users: state.users,
-          updatedAt: Date.now()
-        }
-      };
-
-      await fetch(CLOUD_SYNC_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    } catch (e) {
-      console.warn('Cloud Sync push error:', e);
-    } finally {
-      isCloudSyncing = false;
-    }
+  if (syncChannel) {
+    syncChannel.onmessage = (e) => {
+      if (e.data === 'sync') {
+        loadData();
+        renderCategoryDropdowns();
+        renderTabViews(state.activeTab);
+      }
+    };
   }
 
-  async function pullFromCloudSync(renderAfter = true) {
-    try {
-      const res = await fetch(CLOUD_SYNC_URL);
-      if (!res.ok) return;
-      const result = await res.json();
-
-      if (result && result.data) {
-        const cloudData = result.data;
-        let changed = false;
-
-        if (cloudData.products && JSON.stringify(state.products) !== JSON.stringify(cloudData.products)) {
-          state.products = cloudData.products;
-          changed = true;
-        }
-        if (cloudData.categories && JSON.stringify(state.categories) !== JSON.stringify(cloudData.categories)) {
-          state.categories = cloudData.categories;
-          changed = true;
-        }
-        if (cloudData.customers && JSON.stringify(state.customers) !== JSON.stringify(cloudData.customers)) {
-          state.customers = cloudData.customers;
-          changed = true;
-        }
-        if (cloudData.posTx && JSON.stringify(state.posTx) !== JSON.stringify(cloudData.posTx)) {
-          state.posTx = cloudData.posTx;
-          changed = true;
-        }
-        if (cloudData.wifiTx && JSON.stringify(state.wifiTx) !== JSON.stringify(cloudData.wifiTx)) {
-          state.wifiTx = cloudData.wifiTx;
-          changed = true;
-        }
-
-        if (changed) {
-          saveDataLocally(STORAGE_KEYS.PRODUCTS);
-          saveDataLocally(STORAGE_KEYS.CATEGORIES);
-          saveDataLocally(STORAGE_KEYS.CUSTOMERS);
-          saveDataLocally(STORAGE_KEYS.POS_TX);
-          saveDataLocally(STORAGE_KEYS.WIFI_TX);
-          saveDataLocally(STORAGE_KEYS.USERS_LIST);
-
-          if (renderAfter) {
-            renderCategoryDropdowns();
-            renderTabViews(state.activeTab);
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Cloud Sync pull error:', e);
+  function notifyBroadcastSync() {
+    if (syncChannel) {
+      try { syncChannel.postMessage('sync'); } catch (e) {}
     }
   }
 
@@ -628,12 +565,12 @@
       if (data.users && JSON.stringify(state.users) !== JSON.stringify(data.users)) { state.users = data.users; changed = true; }
 
       if (changed) {
-        saveData(STORAGE_KEYS.PRODUCTS);
-        saveData(STORAGE_KEYS.CATEGORIES);
-        saveData(STORAGE_KEYS.CUSTOMERS);
-        saveData(STORAGE_KEYS.POS_TX);
-        saveData(STORAGE_KEYS.WIFI_TX);
-        saveData(STORAGE_KEYS.USERS_LIST);
+        saveDataLocally(STORAGE_KEYS.PRODUCTS);
+        saveDataLocally(STORAGE_KEYS.CATEGORIES);
+        saveDataLocally(STORAGE_KEYS.CUSTOMERS);
+        saveDataLocally(STORAGE_KEYS.POS_TX);
+        saveDataLocally(STORAGE_KEYS.WIFI_TX);
+        saveDataLocally(STORAGE_KEYS.USERS_LIST);
 
         if (renderAfter) {
           renderCategoryDropdowns();
@@ -646,7 +583,7 @@
   function saveData(key) {
     saveDataLocally(key);
     pushToFirebase();
-    pushToCloudSync();
+    notifyBroadcastSync();
   }
 
   function saveDataLocally(key) {
@@ -2760,20 +2697,17 @@
     }
     updateServerConnectionStatus();
 
-    // Sync with SQLite backend & Cloud Sync Relay
+    // Sync with SQLite backend & Broadcast Channel
     syncWithServer(true);
-    pullFromCloudSync(true);
 
-    // Auto-sync polling every 3 seconds for live sync between HP & Laptop
+    // Fast Auto-sync polling every 1.5 seconds for instant multi-device sync
     setInterval(() => {
       syncWithServer(true);
-      pullFromCloudSync(true);
       updateServerConnectionStatus();
-    }, 3000);
+    }, 1500);
 
     window.addEventListener('focus', () => {
       syncWithServer(true);
-      pullFromCloudSync(true);
       updateServerConnectionStatus();
     });
   });

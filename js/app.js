@@ -92,6 +92,65 @@
     }, duration);
   }
 
+  function showModernAlert(title, message, type = 'info') {
+    const titleEl = document.getElementById('modernAlertTitle');
+    const msgEl = document.getElementById('modernAlertMessage');
+    const iconEl = document.getElementById('modernAlertIcon');
+    const iconBox = document.getElementById('modernAlertIconBox');
+
+    if (!titleEl || !msgEl) {
+      showToast(`${title}: ${message}`, type === 'error' ? 'error' : 'info');
+      return;
+    }
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+
+    if (type === 'error') {
+      iconEl.className = 'fa-solid fa-circle-xmark';
+      iconEl.style.color = '#ef4444';
+      iconBox.style.background = '#fef2f2';
+    } else if (type === 'success') {
+      iconEl.className = 'fa-solid fa-circle-check';
+      iconEl.style.color = '#10b981';
+      iconBox.style.background = '#ecfdf5';
+    } else if (type === 'warning') {
+      iconEl.className = 'fa-solid fa-triangle-exclamation';
+      iconEl.style.color = '#f59e0b';
+      iconBox.style.background = '#fffbeb';
+    } else {
+      iconEl.className = 'fa-solid fa-circle-info';
+      iconEl.style.color = '#3b82f6';
+      iconBox.style.background = '#eff6ff';
+    }
+
+    openModal('modalModernAlert');
+  }
+
+  function showModernConfirm(title, message, onConfirm) {
+    const titleEl = document.getElementById('modernConfirmTitle');
+    const msgEl = document.getElementById('modernConfirmMessage');
+    const btnYes = document.getElementById('btnModernConfirmYes');
+
+    if (!titleEl || !msgEl || !btnYes) {
+      if (confirm(message)) onConfirm();
+      return;
+    }
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+
+    const newBtn = btnYes.cloneNode(true);
+    btnYes.parentNode.replaceChild(newBtn, btnYes);
+
+    newBtn.addEventListener('click', () => {
+      closeModal('modalModernConfirm');
+      if (typeof onConfirm === 'function') onConfirm();
+    });
+
+    openModal('modalModernConfirm');
+  }
+
   // ==========================================
   // 1B. API Client for SQLite Synchronization
   // ==========================================
@@ -887,7 +946,7 @@
         usernameInput.value = '';
         passwordInput.value = '';
       } else {
-        alert('Username atau password yang Anda masukkan tidak sesuai!');
+        showToast('Username atau password yang Anda masukkan tidak sesuai!', 'error');
       }
     });
 
@@ -1992,7 +2051,7 @@
     // Open Checkout Modal
     document.getElementById('btnOpenCheckout').addEventListener('click', () => {
       if (state.cart.length === 0) {
-        alert('Keranjang belanja masih kosong!');
+        showToast('Keranjang belanja masih kosong!', 'warning');
         return;
       }
       const grandTotal = calculateCartGrandTotal();
@@ -2021,14 +2080,22 @@
     const cashInput = document.getElementById('checkoutCash');
     if (cashInput) cashInput.addEventListener('input', updateCheckoutChange);
 
-    // Confirm Checkout Process (Pay Only vs Pay & Print)
-    const btnPayOnly = document.getElementById('btnConfirmCheckoutPayOnly');
-    const btnPayAndPrint = document.getElementById('btnConfirmCheckoutPayAndPrint');
-    if (btnPayOnly) {
-      btnPayOnly.addEventListener('click', () => executeCheckout(false));
+    // Confirm Checkout Process
+    const btnConfirmCheckout = document.getElementById('btnConfirmCheckout');
+    if (btnConfirmCheckout) {
+      btnConfirmCheckout.addEventListener('click', executeCheckout);
     }
-    if (btnPayAndPrint) {
-      btnPayAndPrint.addEventListener('click', () => executeCheckout(true));
+
+    // Success Modal Print Button Listener
+    const btnSuccessPrint = document.getElementById('btnSuccessPrintReceipt');
+    if (btnSuccessPrint) {
+      btnSuccessPrint.addEventListener('click', () => {
+        closeModal('modalPaymentSuccess');
+        if (state.lastPosTx) {
+          renderPosReceipt(state.lastPosTx);
+          openModal('modalPosReceipt');
+        }
+      });
     }
   }
 
@@ -2208,7 +2275,7 @@
     changeDisplay.textContent = formatRupiah(change > 0 ? change : 0);
   }
 
-  function executeCheckout(shouldPrint = false) {
+  function executeCheckout() {
     const grandTotal = calculateCartGrandTotal();
     const cashInput = document.getElementById('checkoutCash');
     const cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
@@ -2230,7 +2297,7 @@
       costPrice: c.product.costPrice
     }));
 
-    // Deduct Product Stock
+    // Deduct Product Stock & Push Sync
     state.cart.forEach(c => {
       const prod = state.products.find(p => p.id === c.product.id);
       if (prod) {
@@ -2252,23 +2319,30 @@
     };
 
     state.posTx.unshift(transaction);
+    state.lastPosTx = transaction;
     saveData(STORAGE_KEYS.POS_TX);
     API.savePosTransaction(transaction);
 
-    // Reset Cart & Close Modal
+    // Reset Cart & Close Checkout Modal
     state.cart = [];
     if (cashInput) cashInput.value = '';
     renderCart();
     renderPosProducts();
     closeModal('modalCheckout');
 
-    if (shouldPrint) {
-      renderPosReceipt(transaction);
-      openModal('modalPosReceipt');
-      showToast('Transaksi & Struk berhasil dibuat!', 'success');
-    } else {
-      showToast(`Pembayaran ${formatRupiah(grandTotal)} berhasil! Kembalian: ${formatRupiah(change)}`, 'success', 4000);
-    }
+    // Populate Success Modal Fields
+    const receiptEl = document.getElementById('successReceiptNo');
+    const totalEl = document.getElementById('successTotalAmount');
+    const cashEl = document.getElementById('successCashAmount');
+    const changeEl = document.getElementById('successChangeAmount');
+
+    if (receiptEl) receiptEl.textContent = transaction.receiptNo;
+    if (totalEl) totalEl.textContent = formatRupiah(grandTotal);
+    if (cashEl) cashEl.textContent = formatRupiah(cash);
+    if (changeEl) changeEl.textContent = formatRupiah(change);
+
+    openModal('modalPaymentSuccess');
+    showToast('Pembayaran berhasil diselesaikan!', 'success');
   }
 
   function renderPosReceipt(tx) {

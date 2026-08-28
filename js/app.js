@@ -2137,6 +2137,12 @@
     state.isProcessingCheckout = true;
 
     try {
+      if (!state.cart || state.cart.length === 0) {
+        showToast('Keranjang belanja kosong!', 'warning');
+        state.isProcessingCheckout = false;
+        return;
+      }
+
       const grandTotal = calculateCartGrandTotal();
       const cashInput = document.getElementById('checkoutCash');
       const cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
@@ -2147,29 +2153,29 @@
         return;
       }
 
-      if (!state.cart || state.cart.length === 0) {
-        showToast('Keranjang belanja kosong!', 'warning');
-        state.isProcessingCheckout = false;
-        return;
-      }
-
       const change = cash - grandTotal;
       const now = new Date();
       const receiptNo = 'INV/AJB/' + Date.now().toString().slice(-6);
 
-      const txItems = state.cart.map(c => ({
-        productId: c.product.id,
-        name: c.product.name,
-        qty: c.qty,
-        price: c.product.sellPrice,
-        costPrice: c.product.costPrice
-      }));
+      const txItems = state.cart.map(c => {
+        const prod = c && c.product ? c.product : {};
+        return {
+          productId: prod.id || ('prod_' + Date.now()),
+          name: prod.name || 'Barang',
+          qty: c ? (c.qty || 1) : 1,
+          price: parseFloat(prod.sellPrice || 0) || 0,
+          costPrice: parseFloat(prod.costPrice || 0) || 0
+        };
+      });
 
       // 1. Deduct Product Stock ONCE & Push Sync to Firebase Cloud
       state.cart.forEach(c => {
-        const prod = state.products.find(p => p.id === c.product.id);
+        if (!c || !c.product) return;
+        const prodId = c.product.id || c.product;
+        const prod = state.products.find(p => p.id === prodId);
         if (prod) {
-          prod.stock = Math.max(0, prod.stock - c.qty);
+          const currentStock = parseInt(prod.stock, 10) || 0;
+          prod.stock = Math.max(0, currentStock - (c.qty || 1));
         }
       });
       saveData(STORAGE_KEYS.PRODUCTS);
@@ -2187,12 +2193,22 @@
         change: change
       };
 
+      if (!Array.isArray(state.posTx)) state.posTx = [];
       state.posTx.unshift(transaction);
       saveData(STORAGE_KEYS.POS_TX);
-      API.savePosTransaction(transaction);
+
+      try {
+        API.savePosTransaction(transaction);
+      } catch (apiErr) {
+        console.warn('API.savePosTransaction warning:', apiErr);
+      }
 
       // 3. Render Receipt Paper
-      renderPosReceipt(transaction);
+      try {
+        renderPosReceipt(transaction);
+      } catch (receiptErr) {
+        console.error('renderPosReceipt error:', receiptErr);
+      }
 
       // 4. Reset Cart, Refresh Product Grid (Stok Berkurang) & Open Receipt Modal
       state.cart = [];
@@ -2205,7 +2221,7 @@
       showToast(`Pembayaran ${formatRupiah(grandTotal)} berhasil! Kembalian: ${formatRupiah(change)}`, 'success', 4000);
     } catch (err) {
       console.error('Checkout error:', err);
-      showToast('Gagal memproses pembayaran!', 'error');
+      showToast('Gagal memproses pembayaran: ' + (err.message || err), 'error', 5000);
     } finally {
       setTimeout(() => {
         state.isProcessingCheckout = false;

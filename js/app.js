@@ -187,54 +187,6 @@
     return Array.from(set);
   }
 
-  function initFirebaseRealtimeSync() {
-    if (typeof firebase === 'undefined') return;
-
-    const dbUrl = getFirebaseDbUrl();
-    if (!dbUrl) return;
-
-    try {
-      if (!firebase.apps.length) {
-        firebase.initializeApp({
-          databaseURL: dbUrl
-        });
-      }
-      firebaseDbRef = firebase.database().ref('ajibstore');
-      isFirebaseSyncActive = true;
-
-      // Single Source of Truth: Listen for real-time changes across all devices via Firebase Realtime Cloud
-      firebaseDbRef.on('value', (snapshot) => {
-        const val = snapshot.val();
-        if (val) {
-          state.products = Array.isArray(val.products) ? val.products : [];
-          state.categories = Array.isArray(val.categories) ? val.categories : [];
-          state.customers = Array.isArray(val.customers) ? val.customers : [];
-          state.posTx = Array.isArray(val.posTx) ? val.posTx : [];
-          state.wifiTx = Array.isArray(val.wifiTx) ? val.wifiTx : [];
-          state.users = Array.isArray(val.users) ? val.users : [];
-
-          saveDataLocally(STORAGE_KEYS.PRODUCTS);
-          saveDataLocally(STORAGE_KEYS.CATEGORIES);
-          saveDataLocally(STORAGE_KEYS.CUSTOMERS);
-          saveDataLocally(STORAGE_KEYS.POS_TX);
-          saveDataLocally(STORAGE_KEYS.WIFI_TX);
-          saveDataLocally(STORAGE_KEYS.USERS_LIST);
-
-          renderCategoryDropdowns();
-          renderTabViews(state.activeTab);
-        } else {
-          // Push initial data if cloud database is completely empty
-          pushToFirebase();
-        }
-      }, (err) => {
-        console.error('Firebase sync error:', err);
-      });
-    } catch (e) {
-      console.warn('Firebase sync error:', e);
-      isFirebaseSyncActive = false;
-    }
-  }
-
   // BroadcastChannel for instant cross-tab sync on same device
   const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ajibstore_broadcast_sync') : null;
 
@@ -246,89 +198,6 @@
         renderTabViews(state.activeTab);
       }
     };
-  }
-
-  async function pushToVercelSync() {
-    try {
-      const payload = {
-        products: state.products,
-        categories: state.categories,
-        customers: state.customers,
-        posTx: state.posTx,
-        wifiTx: state.wifiTx,
-        users: state.users,
-        updatedAt: Date.now()
-      };
-      await fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    } catch (e) {}
-  }
-
-  async function pullFromVercelSync(renderAfter = true) {
-    try {
-      const res = await fetch('/api/sync');
-      if (!res.ok) return;
-      const json = await res.json();
-      if (json && json.success && json.data) {
-        const cloudData = json.data;
-        let changed = false;
-
-        if (cloudData.products && JSON.stringify(state.products) !== JSON.stringify(cloudData.products)) {
-          state.products = cloudData.products;
-          changed = true;
-        }
-        if (cloudData.categories && JSON.stringify(state.categories) !== JSON.stringify(cloudData.categories)) {
-          state.categories = cloudData.categories;
-          changed = true;
-        }
-        if (cloudData.customers && JSON.stringify(state.customers) !== JSON.stringify(cloudData.customers)) {
-          state.customers = cloudData.customers;
-          changed = true;
-        }
-        if (cloudData.posTx && JSON.stringify(state.posTx) !== JSON.stringify(cloudData.posTx)) {
-          state.posTx = cloudData.posTx;
-          changed = true;
-        }
-        if (cloudData.wifiTx && JSON.stringify(state.wifiTx) !== JSON.stringify(cloudData.wifiTx)) {
-          state.wifiTx = cloudData.wifiTx;
-          changed = true;
-        }
-
-        if (changed) {
-          saveDataLocally(STORAGE_KEYS.PRODUCTS);
-          saveDataLocally(STORAGE_KEYS.CATEGORIES);
-          saveDataLocally(STORAGE_KEYS.CUSTOMERS);
-          saveDataLocally(STORAGE_KEYS.POS_TX);
-          saveDataLocally(STORAGE_KEYS.WIFI_TX);
-          saveDataLocally(STORAGE_KEYS.USERS_LIST);
-
-          if (renderAfter) {
-            renderCategoryDropdowns();
-            renderTabViews(state.activeTab);
-          }
-        }
-      }
-    } catch (e) {}
-  }
-
-  function pushToFirebase() {
-    if (firebaseDbRef && isFirebaseSyncActive) {
-      try {
-        firebaseDbRef.set({
-          products: state.products,
-          categories: state.categories,
-          customers: state.customers,
-          posTx: state.posTx,
-          wifiTx: state.wifiTx,
-          users: state.users
-        });
-      } catch (e) {
-        console.error('Firebase push error:', e);
-      }
-    }
   }
 
   const CUSTOM_BACKEND_URL_KEY = 'ajib_store_cloud_backend_url_v1';
@@ -907,7 +776,6 @@
   function saveData(key) {
     saveDataLocally(key);
     pushToFirebase();
-    pushToVercelSync();
     notifyBroadcastSync();
   }
 

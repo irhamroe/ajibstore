@@ -1830,14 +1830,14 @@
     });
 
     tbody.querySelectorAll('.btn-del-prod').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         if (confirm('Yakin ingin menghapus barang ini dari stok?')) {
           state.products = state.products.filter(p => p.id !== id);
           saveData(STORAGE_KEYS.PRODUCTS);
-          API.deleteProduct(id);
           renderProductTable();
           renderPosProducts();
+          try { await API.deleteProduct(id); } catch (e) {}
         }
       });
     });

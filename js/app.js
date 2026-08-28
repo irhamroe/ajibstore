@@ -553,19 +553,6 @@
     }
   }
 
-  // BroadcastChannel for instant cross-tab sync on same device
-  const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ajibstore_broadcast_sync') : null;
-
-  if (syncChannel) {
-    syncChannel.onmessage = (e) => {
-      if (e.data === 'sync') {
-        loadData();
-        renderCategoryDropdowns();
-        renderTabViews(state.activeTab);
-      }
-    };
-  }
-
   function pushToFirebase() {
     if (firebaseDbRef && isFirebaseSyncActive) {
       try {
@@ -582,53 +569,6 @@
       }
     }
   }
-
-  const CUSTOM_BACKEND_URL_KEY = 'ajib_store_cloud_backend_url_v1';
-
-  function getApiBaseUrl() {
-    const custom = localStorage.getItem(CUSTOM_BACKEND_URL_KEY);
-    if (custom) return custom.replace(/\/+$/, '');
-    return '';
-  }
-
-  const API = {
-    isServer: window.location.protocol.startsWith('http'),
-
-    async getServerInfo() {
-      if (!this.isServer && !getApiBaseUrl()) return null;
-      try {
-        const res = await fetch(`${getApiBaseUrl()}/api/server-info`);
-        return await res.json();
-      } catch (e) {
-        return null;
-      }
-    },
-
-    async fetchAll() {
-      if (!this.isServer && !getApiBaseUrl()) return null;
-      const baseUrl = getApiBaseUrl();
-      try {
-        const [prods, cats, custs, posTx, wifiTx, users] = await Promise.all([
-          fetch(`${baseUrl}/api/products`).then(r => r.json()),
-          fetch(`${baseUrl}/api/categories`).then(r => r.json()),
-          fetch(`${baseUrl}/api/customers`).then(r => r.json()),
-          fetch(`${baseUrl}/api/pos-transactions`).then(r => r.json()),
-          fetch(`${baseUrl}/api/wifi-transactions`).then(r => r.json()),
-          fetch(`${baseUrl}/api/users`).then(r => r.json())
-        ]);
-        return {
-          products: prods.success ? prods.data : null,
-          categories: cats.success ? cats.data : null,
-          customers: custs.success ? custs.data : null,
-          posTx: posTx.success ? posTx.data : null,
-          wifiTx: wifiTx.success ? wifiTx.data : null,
-          users: users.success ? users.data : null
-        };
-      } catch (err) {
-        return null;
-      }
-    }
-  };
 
   let serverInfoData = null;
 

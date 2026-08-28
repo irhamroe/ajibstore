@@ -2193,6 +2193,10 @@
     showToast(`Pembayaran ${formatRupiah(grandTotal)} berhasil! Kembalian: ${formatRupiah(change)}`, 'success', 4000);
   }
 
+  // Expose global handlers for fail-proof inline onclick execution
+  window.appExecuteCheckout = executeCheckout;
+  window.updateCheckoutChange = updateCheckoutChange;
+
   function renderPosReceipt(tx) {
     const area = document.getElementById('posReceiptArea');
     area.innerHTML = `

@@ -369,6 +369,24 @@ app.delete('/api/pos-transactions/:id', (req, res) => {
   });
 });
 
+app.put('/api/pos-transactions/:id', (req, res) => {
+  const { total, cash, change, items } = req.body;
+  const itemsJson = items ? JSON.stringify(items) : null;
+  let query = 'UPDATE pos_transactions SET total = ?, cash = ?, change = ?';
+  const params = [total, cash, change];
+  if (itemsJson) {
+    query += ', items_json = ?';
+    params.push(itemsJson);
+  }
+  query += ' WHERE id = ?';
+  params.push(req.params.id);
+
+  db.run(query, params, function (err) {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+    res.json({ success: true, message: 'Transaksi POS berhasil diperbarui' });
+  });
+});
+
 // --- 5. Wifi Transactions API ---
 app.get('/api/wifi-transactions', (req, res) => {
   db.all('SELECT * FROM wifi_transactions ORDER BY timestamp DESC', [], (err, rows) => {
@@ -416,6 +434,18 @@ app.delete('/api/wifi-transactions/:id', (req, res) => {
     if (err) return res.status(500).json({ success: false, error: err.message });
     res.json({ success: true, message: 'Transaksi Wifi berhasil dihapus' });
   });
+});
+
+app.put('/api/wifi-transactions/:id', (req, res) => {
+  const { customerId, customerName, bandwidth, periodMonth, amount, notes } = req.body;
+  db.run(
+    `UPDATE wifi_transactions SET customer_id = ?, customer_name = ?, bandwidth = ?, period_month = ?, amount = ?, notes = ? WHERE id = ?`,
+    [customerId, customerName, bandwidth, periodMonth, amount, notes, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ success: false, error: err.message });
+      res.json({ success: true, message: 'Transaksi Wifi berhasil diperbarui' });
+    }
+  );
 });
 
 // --- 6. Users API ---

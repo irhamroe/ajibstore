@@ -289,6 +289,28 @@
       } catch (e) { console.error('API deleteWifiTransaction error:', e); }
     },
 
+    async updatePosTransaction(tx) {
+      if (!this.isServer && !getApiBaseUrl()) return;
+      try {
+        await fetch(`${getApiBaseUrl()}/api/pos-transactions/${tx.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tx)
+        });
+      } catch (e) { console.error('API updatePosTransaction error:', e); }
+    },
+
+    async updateWifiTransaction(tx) {
+      if (!this.isServer && !getApiBaseUrl()) return;
+      try {
+        await fetch(`${getApiBaseUrl()}/api/wifi-transactions/${tx.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tx)
+        });
+      } catch (e) { console.error('API updateWifiTransaction error:', e); }
+    },
+
     async saveUser(user) {
       if (!this.isServer && !getApiBaseUrl()) return;
       try {
@@ -1036,6 +1058,114 @@
     }
   }
 
+  function openEditPosTxModal(id) {
+    const tx = state.posTx.find(t => t.id === id);
+    if (!tx) return;
+
+    document.getElementById('editPosTxId').value = tx.id;
+    document.getElementById('editPosTxReceiptNo').value = tx.receiptNo;
+    document.getElementById('editPosTxTotal').value = tx.total;
+    document.getElementById('editPosTxCash').value = tx.cash;
+    document.getElementById('editPosTxChange').value = tx.change || Math.max(0, tx.cash - tx.total);
+
+    openModal('modalEditPosTx');
+  }
+
+  function initEditPosTx() {
+    const form = document.getElementById('formEditPosTx');
+    if (!form) return;
+
+    const totalInput = document.getElementById('editPosTxTotal');
+    const cashInput = document.getElementById('editPosTxCash');
+    const changeInput = document.getElementById('editPosTxChange');
+
+    const updateChange = () => {
+      const tot = parseFloat(totalInput.value || 0);
+      const csh = parseFloat(cashInput.value || 0);
+      changeInput.value = Math.max(0, csh - tot);
+    };
+
+    totalInput.addEventListener('input', updateChange);
+    cashInput.addEventListener('input', updateChange);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editPosTxId').value;
+      const total = parseFloat(totalInput.value);
+      const cash = parseFloat(cashInput.value);
+      const change = Math.max(0, cash - total);
+
+      const idx = state.posTx.findIndex(t => t.id === id);
+      if (idx !== -1) {
+        state.posTx[idx].total = total;
+        state.posTx[idx].cash = cash;
+        state.posTx[idx].change = change;
+        state.posTx[idx].subtotal = total;
+
+        saveData(STORAGE_KEYS.POS_TX);
+        API.updatePosTransaction(state.posTx[idx]);
+
+        closeModal('modalEditPosTx');
+        renderDashboard();
+        if (state.activeTab === 'rekap-pos') renderRekapPos();
+        alert(`Transaksi POS (Nota: ${state.posTx[idx].receiptNo}) berhasil diperbarui!`);
+      }
+    });
+  }
+
+  function openEditWifiTxModal(id) {
+    const tx = state.wifiTx.find(t => t.id === id);
+    if (!tx) return;
+
+    const selectCust = document.getElementById('editWifiTxCustomerId');
+    selectCust.innerHTML = state.customers.map(c => `<option value="${c.id}">${c.name} (${c.bandwidth})</option>`).join('');
+    selectCust.value = tx.customerId || (state.customers[0] ? state.customers[0].id : '');
+
+    document.getElementById('editWifiTxId').value = tx.id;
+    document.getElementById('editWifiTxMonth').value = tx.periodMonth || '';
+    document.getElementById('editWifiTxAmount').value = tx.amount || 0;
+    document.getElementById('editWifiTxNotes').value = tx.notes || '';
+
+    openModal('modalEditWifiTx');
+  }
+
+  function initEditWifiTx() {
+    const form = document.getElementById('formEditWifiTx');
+    if (!form) return;
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editWifiTxId').value;
+      const customerId = document.getElementById('editWifiTxCustomerId').value;
+      const periodMonth = document.getElementById('editWifiTxMonth').value;
+      const amount = parseFloat(document.getElementById('editWifiTxAmount').value);
+      const notes = document.getElementById('editWifiTxNotes').value || 'Lunas';
+
+      const customer = state.customers.find(c => c.id === customerId);
+
+      const idx = state.wifiTx.findIndex(t => t.id === id);
+      if (idx !== -1) {
+        state.wifiTx[idx].customerId = customer ? customer.id : customerId;
+        state.wifiTx[idx].customerName = customer ? customer.name : state.wifiTx[idx].customerName;
+        state.wifiTx[idx].bandwidth = customer ? customer.bandwidth : state.wifiTx[idx].bandwidth;
+        state.wifiTx[idx].address = customer ? customer.address : state.wifiTx[idx].address;
+        state.wifiTx[idx].periodMonth = periodMonth;
+        state.wifiTx[idx].amount = amount;
+        state.wifiTx[idx].notes = notes;
+
+        saveData(STORAGE_KEYS.WIFI_TX);
+        API.updateWifiTransaction(state.wifiTx[idx]);
+
+        closeModal('modalEditWifiTx');
+        renderDashboard();
+        if (state.activeTab === 'rekap-wifi') renderRekapWifi();
+        if (state.activeTab === 'pelanggan-wifi') renderWifiCustomers();
+        if (state.activeTab === 'bayar-wifi') renderRecentWifiPayments();
+        alert(`Transaksi Wifi pelanggan "${state.wifiTx[idx].customerName}" berhasil diperbarui!`);
+      }
+    });
+  }
+
   function renderDashboardRecentTx() {
     const tbody = document.getElementById('dashRecentTxTableBody');
     if (!tbody) return;
@@ -1082,6 +1212,9 @@
         </td>
         <td style="text-align: right;">
           <div style="display: inline-flex; gap: 4px;">
+            <button class="btn btn-sm btn-primary btn-edit-dash-tx" data-id="${t.id}" data-type="${t.type}" title="Edit Transaksi">
+              <i class="fa-solid fa-pen"></i>
+            </button>
             <button class="btn btn-sm btn-secondary btn-print-dash-tx" data-id="${t.id}" data-type="${t.type}" title="Cetak Struk">
               <i class="fa-solid fa-print"></i>
             </button>
@@ -1092,6 +1225,18 @@
         </td>
       </tr>
     `).join('');
+
+    tbody.querySelectorAll('.btn-edit-dash-tx').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        const type = b.getAttribute('data-type');
+        if (type === 'pos') {
+          openEditPosTxModal(id);
+        } else {
+          openEditWifiTxModal(id);
+        }
+      });
+    });
 
     tbody.querySelectorAll('.btn-print-dash-tx').forEach(b => {
       b.addEventListener('click', () => {
@@ -1901,6 +2046,9 @@
           <td><span class="badge badge-success">Tunai</span></td>
           <td style="text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
+              <button class="btn btn-sm btn-primary btn-edit-pos-tx" data-id="${t.id}" title="Edit Transaksi">
+                <i class="fa-solid fa-pen"></i> Edit
+              </button>
               <button class="btn btn-sm btn-secondary btn-view-pos-receipt" data-id="${t.id}" title="Lihat/Cetak Struk">
                 <i class="fa-solid fa-print"></i> Struk
               </button>
@@ -1912,6 +2060,13 @@
         </tr>
       `;
     }).join('');
+
+    tbody.querySelectorAll('.btn-edit-pos-tx').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        openEditPosTxModal(id);
+      });
+    });
 
     tbody.querySelectorAll('.btn-view-pos-receipt').forEach(b => {
       b.addEventListener('click', () => {
@@ -2427,6 +2582,9 @@
         <td style="font-weight: 700; color: #34d399;">${formatRupiah(t.amount)}</td>
         <td style="text-align: right;">
           <div style="display: inline-flex; gap: 6px;">
+            <button class="btn btn-sm btn-primary btn-edit-wifi-tx" data-id="${t.id}" title="Edit Transaksi">
+              <i class="fa-solid fa-pen"></i> Edit
+            </button>
             <button class="btn btn-sm btn-secondary btn-view-wifi-receipt" data-id="${t.id}" title="Lihat/Cetak Struk">
               <i class="fa-solid fa-print"></i> Struk
             </button>
@@ -2437,6 +2595,13 @@
         </td>
       </tr>
     `).join('');
+
+    tbody.querySelectorAll('.btn-edit-wifi-tx').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        openEditWifiTxModal(id);
+      });
+    });
 
     tbody.querySelectorAll('.btn-view-wifi-receipt').forEach(b => {
       b.addEventListener('click', () => {
@@ -2469,10 +2634,12 @@
     initProductManagement();
     initPosCashier();
     initRekapPos();
+    initEditPosTx();
     initUserManagement();
     initWifiCustomers();
     initBayarWifi();
     initRekapWifi();
+    initEditWifiTx();
 
     // Default Render Dashboard
     renderDashboard();

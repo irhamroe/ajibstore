@@ -11,7 +11,7 @@ const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DB_PATH = path.join(__dirname, 'ajibstore.db');
+const DB_PATH = process.env.VERCEL ? path.join('/tmp', 'ajibstore.db') : path.join(__dirname, 'ajibstore.db');
 
 // Middleware
 app.use(cors());
@@ -181,6 +181,17 @@ function seedDefaultDataIfEmpty() {
 // ==========================================
 // REST API Endpoints
 // ==========================================
+
+// --- Server Info API ---
+app.get('/api/server-info', (req, res) => {
+  const ips = getLocalIpAddresses();
+  res.json({
+    success: true,
+    ips: ips,
+    port: PORT,
+    serverTime: new Date().toISOString()
+  });
+});
 
 // --- 1. Products API ---
 app.get('/api/products', (req, res) => {

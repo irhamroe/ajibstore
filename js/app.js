@@ -67,19 +67,38 @@
   // ==========================================
   // 1B. API Client for SQLite Synchronization
   // ==========================================
+  const CUSTOM_BACKEND_URL_KEY = 'ajib_store_cloud_backend_url_v1';
+
+  function getApiBaseUrl() {
+    const custom = localStorage.getItem(CUSTOM_BACKEND_URL_KEY);
+    if (custom) return custom.replace(/\/+$/, '');
+    return '';
+  }
+
   const API = {
     isServer: window.location.protocol.startsWith('http'),
 
+    async getServerInfo() {
+      if (!this.isServer && !getApiBaseUrl()) return null;
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/server-info`);
+        return await res.json();
+      } catch (e) {
+        return null;
+      }
+    },
+
     async fetchAll() {
-      if (!this.isServer) return null;
+      if (!this.isServer && !getApiBaseUrl()) return null;
+      const baseUrl = getApiBaseUrl();
       try {
         const [prods, cats, custs, posTx, wifiTx, users] = await Promise.all([
-          fetch('/api/products').then(r => r.json()),
-          fetch('/api/categories').then(r => r.json()),
-          fetch('/api/customers').then(r => r.json()),
-          fetch('/api/pos-transactions').then(r => r.json()),
-          fetch('/api/wifi-transactions').then(r => r.json()),
-          fetch('/api/users').then(r => r.json())
+          fetch(`${baseUrl}/api/products`).then(r => r.json()),
+          fetch(`${baseUrl}/api/categories`).then(r => r.json()),
+          fetch(`${baseUrl}/api/customers`).then(r => r.json()),
+          fetch(`${baseUrl}/api/pos-transactions`).then(r => r.json()),
+          fetch(`${baseUrl}/api/wifi-transactions`).then(r => r.json()),
+          fetch(`${baseUrl}/api/users`).then(r => r.json())
         ]);
         return {
           products: prods.success ? prods.data : null,
@@ -95,9 +114,9 @@
     },
 
     async saveProduct(product) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch('/api/products', {
+        await fetch(`${getApiBaseUrl()}/api/products`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(product)
@@ -106,16 +125,16 @@
     },
 
     async deleteProduct(id) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        await fetch(`${getApiBaseUrl()}/api/products/${id}`, { method: 'DELETE' });
       } catch (e) { console.error('API deleteProduct error:', e); }
     },
 
     async addCategory(name) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch('/api/categories', {
+        await fetch(`${getApiBaseUrl()}/api/categories`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name })
@@ -124,9 +143,9 @@
     },
 
     async updateCategory(oldName, newName) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch('/api/categories', {
+        await fetch(`${getApiBaseUrl()}/api/categories`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ oldName, newName })
@@ -135,16 +154,16 @@
     },
 
     async deleteCategory(name) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch(`/api/categories/${encodeURIComponent(name)}`, { method: 'DELETE' });
+        await fetch(`${getApiBaseUrl()}/api/categories/${encodeURIComponent(name)}`, { method: 'DELETE' });
       } catch (e) { console.error('API deleteCategory error:', e); }
     },
 
     async saveCustomer(customer) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch('/api/customers', {
+        await fetch(`${getApiBaseUrl()}/api/customers`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(customer)
@@ -153,16 +172,16 @@
     },
 
     async deleteCustomer(id) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+        await fetch(`${getApiBaseUrl()}/api/customers/${id}`, { method: 'DELETE' });
       } catch (e) { console.error('API deleteCustomer error:', e); }
     },
 
     async savePosTransaction(tx) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch('/api/pos-transactions', {
+        await fetch(`${getApiBaseUrl()}/api/pos-transactions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(tx)
@@ -171,9 +190,9 @@
     },
 
     async saveWifiTransaction(tx) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch('/api/wifi-transactions', {
+        await fetch(`${getApiBaseUrl()}/api/wifi-transactions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(tx)
@@ -182,9 +201,9 @@
     },
 
     async saveUser(user) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch('/api/users', {
+        await fetch(`${getApiBaseUrl()}/api/users`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(user)
@@ -193,9 +212,9 @@
     },
 
     async deleteUser(id) {
-      if (!this.isServer) return;
+      if (!this.isServer && !getApiBaseUrl()) return;
       try {
-        await fetch(`/api/users/${id}`, { method: 'DELETE' });
+        await fetch(`${getApiBaseUrl()}/api/users/${id}`, { method: 'DELETE' });
       } catch (e) { console.error('API deleteUser error:', e); }
     }
   };
@@ -224,16 +243,145 @@
     }
   }
 
+  let serverInfoData = null;
+
+  async function updateServerConnectionStatus() {
+    const badge = document.getElementById('connectionStatusBadge');
+    const textEl = document.getElementById('syncStatusText');
+    if (!badge || !textEl) return;
+
+    if (!API.isServer) {
+      badge.className = 'connection-status-widget offline';
+      textEl.textContent = 'Offline (File)';
+      serverInfoData = { isServer: false };
+      return;
+    }
+
+    const info = await API.getServerInfo();
+    if (info && info.success) {
+      serverInfoData = { isServer: true, ...info };
+      badge.className = 'connection-status-widget connected';
+      textEl.textContent = 'Server Sync';
+    } else {
+      badge.className = 'connection-status-widget offline';
+      textEl.textContent = 'Terputus';
+      serverInfoData = { isServer: false };
+    }
+  }
+
+  function showServerInfoModal() {
+    const content = document.getElementById('serverInfoModalContent');
+    if (!content) return;
+
+    const currentCloudUrl = getApiBaseUrl();
+
+    if (serverInfoData && serverInfoData.isServer) {
+      const port = serverInfoData.port || 3000;
+      const ips = serverInfoData.ips || [];
+      
+      let ipsHtml = '';
+      if (ips.length > 0) {
+        ipsHtml = ips.map(ip => `
+          <div style="background: #eff6ff; border: 1px dashed #3b82f6; padding: 12px; border-radius: 8px; margin-top: 8px; word-break: break-all;">
+            <div style="font-size: 0.75rem; color: #1e40af; font-weight: 600; text-transform: uppercase;">URL Handphone / Tablet (Lokal Wifi)</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #1d4ed8; font-family: monospace; margin-top: 2px;">
+              http://${ip}:${port}
+            </div>
+          </div>
+        `).join('');
+      } else {
+        ipsHtml = `<div style="color: #64748b; font-size: 0.85rem;">Tidak ditemukan IP LAN aktif. Pastikan laptop terhubung ke Wifi/Hotspot.</div>`;
+      }
+
+      content.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;">
+          <i class="fa-solid fa-circle-check" style="color: #059669; font-size: 1.5rem;"></i>
+          <div>
+            <div style="font-weight: 700; color: #065f46;">Aplikasi Terkoneksi ke Server Database!</div>
+            <div style="font-size: 0.8rem; color: #047857;">Setiap barang/transaksi yang Anda input di laptop akan langsung tersimpan & muncul di HP.</div>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #1e293b;">Buka di HP via Jaringan Lokal (Wifi):</h4>
+        <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">
+          Hubungkan HP dan Laptop ke Wifi yang sama, lalu buka alamat berikut:
+        </p>
+        ${ipsHtml}
+
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #1e293b;">Koneksi Cloud Server (Render / Vercel):</h4>
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label class="form-label" style="font-size: 0.8rem;">URL Backend Cloud Render.com</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="inputCloudBackendUrl" class="form-control" placeholder="https://ajibstore.onrender.com" value="${currentCloudUrl}">
+            <button type="button" class="btn btn-primary" id="btnSaveCloudUrl" style="flex-shrink: 0;">Hubungkan</button>
+          </div>
+        </div>
+      `;
+    } else {
+      content.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; background: #fffbeb; border: 1px solid #fef08a; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;">
+          <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; font-size: 1.5rem;"></i>
+          <div>
+            <div style="font-weight: 700; color: #92400e;">Mode Standalone (File) / Terputus</div>
+            <div style="font-size: 0.8rem; color: #b45309;">Aplikasi belum terhubung ke Server Database Online.</div>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #1e293b;">Hubungkan Vercel ke Cloud Database Render:</h4>
+        <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">
+          Masukkan URL Backend Render Anda agar <strong>ajibstore.vercel.app</strong> langsung tersimpan ke Cloud Database:
+        </p>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">URL Cloud Server Render</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="inputCloudBackendUrl" class="form-control" placeholder="https://ajibstore.onrender.com" value="${currentCloudUrl}">
+            <button type="button" class="btn btn-primary" id="btnSaveCloudUrl" style="flex-shrink: 0;">Simpan</button>
+          </div>
+        </div>
+
+        <div style="font-size: 0.8rem; color: #64748b; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <strong>Belum punya URL Render?</strong><br>
+          Deploy repositori GitHub Anda di <a href="https://dashboard.render.com" target="_blank" style="color: #2563eb; font-weight: 600;">Render.com</a> (Gratis 100%).
+        </div>
+      `;
+    }
+
+    // Attach Save Cloud URL Button Handler
+    const btnSave = document.getElementById('btnSaveCloudUrl');
+    if (btnSave) {
+      btnSave.addEventListener('click', async () => {
+        const val = document.getElementById('inputCloudBackendUrl').value.trim();
+        if (val) {
+          localStorage.setItem(CUSTOM_BACKEND_URL_KEY, val);
+          alert('URL Cloud Server berhasil disimpan! Aplikasi akan mencoba tersambung...');
+          closeModal('modalServerInfo');
+          await updateServerConnectionStatus();
+          await syncWithServer(true);
+        } else {
+          localStorage.removeItem(CUSTOM_BACKEND_URL_KEY);
+          alert('URL Cloud Backend direset ke default.');
+          closeModal('modalServerInfo');
+          await updateServerConnectionStatus();
+        }
+      });
+    }
+
+    openModal('modalServerInfo');
+  }
+
   async function syncWithServer(renderAfter = true) {
     const data = await API.fetchAll();
     if (data) {
       let changed = false;
-      if (data.products) { state.products = data.products; changed = true; }
-      if (data.categories) { state.categories = data.categories; changed = true; }
-      if (data.customers) { state.customers = data.customers; changed = true; }
-      if (data.posTx) { state.posTx = data.posTx; changed = true; }
-      if (data.wifiTx) { state.wifiTx = data.wifiTx; changed = true; }
-      if (data.users) { state.users = data.users; changed = true; }
+      if (data.products && JSON.stringify(state.products) !== JSON.stringify(data.products)) { state.products = data.products; changed = true; }
+      if (data.categories && JSON.stringify(state.categories) !== JSON.stringify(data.categories)) { state.categories = data.categories; changed = true; }
+      if (data.customers && JSON.stringify(state.customers) !== JSON.stringify(data.customers)) { state.customers = data.customers; changed = true; }
+      if (data.posTx && JSON.stringify(state.posTx) !== JSON.stringify(data.posTx)) { state.posTx = data.posTx; changed = true; }
+      if (data.wifiTx && JSON.stringify(state.wifiTx) !== JSON.stringify(data.wifiTx)) { state.wifiTx = data.wifiTx; changed = true; }
+      if (data.users && JSON.stringify(state.users) !== JSON.stringify(data.users)) { state.users = data.users; changed = true; }
 
       if (changed) {
         saveData(STORAGE_KEYS.PRODUCTS);
@@ -2121,16 +2269,25 @@
     // Default Render Dashboard
     renderDashboard();
 
+    // Connection status & info modal trigger
+    const syncBadge = document.getElementById('connectionStatusBadge');
+    if (syncBadge) {
+      syncBadge.addEventListener('click', showServerInfoModal);
+    }
+    updateServerConnectionStatus();
+
     // Sync with SQLite backend
     syncWithServer(true);
 
     // Auto-sync polling every 3.5 seconds
     setInterval(() => {
       syncWithServer(true);
+      updateServerConnectionStatus();
     }, 3500);
 
     window.addEventListener('focus', () => {
       syncWithServer(true);
+      updateServerConnectionStatus();
     });
   });
 

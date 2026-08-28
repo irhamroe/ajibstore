@@ -355,6 +355,39 @@ body {
   gap: 12px;
 }
 
+.connection-status-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  user-select: none;
+}
+
+.connection-status-widget.connected {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.connection-status-widget.connected:hover {
+  background: rgba(16, 185, 129, 0.22);
+}
+
+.connection-status-widget.offline {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.connection-status-widget.offline:hover {
+  background: rgba(245, 158, 11, 0.22);
+}
+
 .clock-widget {
   background: var(--bg-muted);
   border: 1px solid var(--border-color);
@@ -1303,6 +1336,18 @@ body {
 
   .clock-widget {
     display: none;
+  }
+
+  .connection-status-widget {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+
+  .connection-status-widget span {
+    max-width: 85px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .user-profile-widget {

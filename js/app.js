@@ -774,6 +774,14 @@
     }
   }
 
+  function notifyBroadcastSync() {
+    if (typeof syncChannel !== 'undefined' && syncChannel) {
+      try {
+        syncChannel.postMessage('sync');
+      } catch (e) {}
+    }
+  }
+
   function saveData(key) {
     saveDataLocally(key);
     pushToFirebase();

@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Ajib Store & Ajib.Net - POS Elektronik & Wifi Billing System</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -150,7 +151,7 @@
             <div class="stat-card stat-wifi">
               <div class="stat-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
               <div class="stat-details">
-                <h3>Pembayaran Wifi Bulan Ini</h3>
+                <h3>Pembayaran Ajib.Net</h3>
                 <div class="stat-value" id="dashWifiMonthlyRevenue">Rp 0</div>
               </div>
             </div>
@@ -158,7 +159,8 @@
 
           <div class="dashboard-grid">
             <div class="glass-card">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+              <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                 <h3><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-pos);"></i> Riwayat Transaksi
                   Terakhir</h3>
                 <button class="btn btn-sm btn-secondary" id="btnDashViewAllTx"><i class="fa-solid fa-arrow-right"></i>
@@ -918,107 +920,111 @@
         <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalServerInfo">Tutup</button>
       </div>
     </div>
-  <!-- Modal 9: Edit Transaksi POS -->
-  <div class="modal-overlay" id="modalEditPosTx">
-    <div class="modal-content" style="max-width: 480px;">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-pen-to-square"></i> Edit Transaksi Toko POS</h3>
-        <button class="modal-close-btn closeModalBtn" data-modal="modalEditPosTx">&times;</button>
+    <!-- Modal 9: Edit Transaksi POS -->
+    <div class="modal-overlay" id="modalEditPosTx">
+      <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-pen-to-square"></i> Edit Transaksi Toko POS</h3>
+          <button class="modal-close-btn closeModalBtn" data-modal="modalEditPosTx">&times;</button>
+        </div>
+        <form id="formEditPosTx">
+          <div class="modal-body" style="padding: 20px;">
+            <input type="hidden" id="editPosTxId">
+            <div class="form-group">
+              <label class="form-label">No. Nota Transaksi</label>
+              <input type="text" id="editPosTxReceiptNo" class="form-control" readonly
+                style="background: var(--bg-muted);">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Total Pembayaran (Rp)</label>
+              <input type="number" id="editPosTxTotal" class="form-control" required min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Uang Tunai Diterima (Rp)</label>
+              <input type="number" id="editPosTxCash" class="form-control" required min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Uang Kembalian (Rp)</label>
+              <input type="number" id="editPosTxChange" class="form-control" readonly
+                style="background: var(--bg-muted);">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalEditPosTx">Batal</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Simpan
+              Perubahan</button>
+          </div>
+        </form>
       </div>
-      <form id="formEditPosTx">
-        <div class="modal-body" style="padding: 20px;">
-          <input type="hidden" id="editPosTxId">
-          <div class="form-group">
-            <label class="form-label">No. Nota Transaksi</label>
-            <input type="text" id="editPosTxReceiptNo" class="form-control" readonly style="background: var(--bg-muted);">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Total Pembayaran (Rp)</label>
-            <input type="number" id="editPosTxTotal" class="form-control" required min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Uang Tunai Diterima (Rp)</label>
-            <input type="number" id="editPosTxCash" class="form-control" required min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Uang Kembalian (Rp)</label>
-            <input type="number" id="editPosTxChange" class="form-control" readonly style="background: var(--bg-muted);">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalEditPosTx">Batal</button>
-          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
-        </div>
-      </form>
     </div>
-  </div>
 
-  <!-- Modal 10: Edit Transaksi Wifi -->
-  <div class="modal-overlay" id="modalEditWifiTx">
-    <div class="modal-content" style="max-width: 480px;">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-pen-to-square"></i> Edit Transaksi Wifi Ajib.Net</h3>
-        <button class="modal-close-btn closeModalBtn" data-modal="modalEditWifiTx">&times;</button>
+    <!-- Modal 10: Edit Transaksi Wifi -->
+    <div class="modal-overlay" id="modalEditWifiTx">
+      <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-pen-to-square"></i> Edit Transaksi Wifi Ajib.Net</h3>
+          <button class="modal-close-btn closeModalBtn" data-modal="modalEditWifiTx">&times;</button>
+        </div>
+        <form id="formEditWifiTx">
+          <div class="modal-body" style="padding: 20px;">
+            <input type="hidden" id="editWifiTxId">
+            <div class="form-group">
+              <label class="form-label">Pilih Pelanggan Ajib.Net</label>
+              <select id="editWifiTxCustomerId" class="form-control form-control-wifi" required>
+                <!-- Options populated dynamically -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Periode Bulan Pembayaran</label>
+              <input type="month" id="editWifiTxMonth" class="form-control form-control-wifi" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nominal Pembayaran (Rp)</label>
+              <input type="number" id="editWifiTxAmount" class="form-control form-control-wifi" required min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Catatan / Keterangan</label>
+              <input type="text" id="editWifiTxNotes" class="form-control form-control-wifi"
+                placeholder="Contoh: Lunas via Kasir Ajib Store">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalEditWifiTx">Batal</button>
+            <button type="submit" class="btn btn-wifi"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
+          </div>
+        </form>
       </div>
-      <form id="formEditWifiTx">
-        <div class="modal-body" style="padding: 20px;">
-          <input type="hidden" id="editWifiTxId">
-          <div class="form-group">
-            <label class="form-label">Pilih Pelanggan Ajib.Net</label>
-            <select id="editWifiTxCustomerId" class="form-control form-control-wifi" required>
-              <!-- Options populated dynamically -->
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Periode Bulan Pembayaran</label>
-            <input type="month" id="editWifiTxMonth" class="form-control form-control-wifi" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Nominal Pembayaran (Rp)</label>
-            <input type="number" id="editWifiTxAmount" class="form-control form-control-wifi" required min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Catatan / Keterangan</label>
-            <input type="text" id="editWifiTxNotes" class="form-control form-control-wifi" placeholder="Contoh: Lunas via Kasir Ajib Store">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalEditWifiTx">Batal</button>
-          <button type="submit" class="btn btn-wifi"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
-        </div>
-      </form>
     </div>
-  </div>
 
-  <!-- MODAL LOGIN SCREEN -->
-  <div class="login-screen-wrapper" id="loginScreen">
-    <div class="login-card">
-      <div class="login-brand-logo">
-        <i class="fa-solid fa-bolt"></i>
+    <!-- MODAL LOGIN SCREEN -->
+    <div class="login-screen-wrapper" id="loginScreen">
+      <div class="login-card">
+        <div class="login-brand-logo">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <h2 style="color: var(--text-main); font-weight: 800; margin-bottom: 24px;">Ajib Store</h2>
+
+        <form id="formLogin">
+          <div class="form-group" style="text-align: left;">
+            <label class="form-label">Username</label>
+            <input type="text" id="loginUsername" class="form-control" placeholder="Masukkan username" required>
+          </div>
+
+          <div class="form-group" style="text-align: left;">
+            <label class="form-label">Password</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary"
+            style="width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem;">
+            <i class="fa-solid fa-right-to-bracket"></i> Masuk
+          </button>
+        </form>
       </div>
-      <h2 style="color: var(--text-main); font-weight: 800; margin-bottom: 24px;">Ajib Store</h2>
-
-      <form id="formLogin">
-        <div class="form-group" style="text-align: left;">
-          <label class="form-label">Username</label>
-          <input type="text" id="loginUsername" class="form-control" placeholder="Masukkan username" required>
-        </div>
-
-        <div class="form-group" style="text-align: left;">
-          <label class="form-label">Password</label>
-          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary"
-          style="width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem;">
-          <i class="fa-solid fa-right-to-bracket"></i> Masuk
-        </button>
-      </form>
     </div>
-  </div>
 
-  <!-- Application Logic -->
-  <script src="js/app.js"></script>
+    <!-- Application Logic -->
+    <script src="js/app.js"></script>
 </body>
 
 </html>

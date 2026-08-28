@@ -851,10 +851,11 @@ body {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 16px;
   margin-top: 16px;
-  max-height: 600px;
+  max-height: calc(100vh - 220px);
+  min-height: 400px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -863,7 +864,7 @@ body {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 13px;
+  padding: 14px;
   cursor: pointer;
   transition: var(--transition-fast);
   display: flex;
@@ -880,16 +881,30 @@ body {
 }
 
 .prod-img-box {
-  height: 85px;
+  height: 135px;
   border-radius: var(--radius-sm);
   background: var(--bg-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 2.4rem;
   color: var(--accent-pos);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   overflow: hidden;
+  position: relative;
+}
+
+.prod-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.product-item-card:hover .prod-img-box img {
+  transform: scale(1.05);
 }
 
 .prod-title {
@@ -1519,14 +1534,14 @@ body {
 
   .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    max-height: 440px;
-    gap: 8px;
+    max-height: 520px;
+    gap: 10px;
     width: 100% !important;
   }
 
   .prod-img-box {
-    height: 70px;
-    font-size: 1.6rem;
+    height: 110px;
+    font-size: 1.8rem;
   }
 
   .prod-title {

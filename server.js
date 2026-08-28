@@ -161,20 +161,11 @@ function seedDefaultDataIfEmpty() {
     // Seed Products
     db.get('SELECT COUNT(*) as count FROM products', (err, row) => {
       if (!err && row.count === 0) {
-        const defaultProducts = [
-          { id: 'p1', barcode: '899100100201', name: 'Router Wifi TP-Link Archer C6 AC1200', category: 'Jaringan & Wifi', costPrice: 320000, sellPrice: 395000, stock: 12 },
-          { id: 'p2', barcode: '899100100202', name: 'Kabel UTP Cat6 Belden 10 Meter Ready', category: 'Komponen & Kabel', costPrice: 35000, sellPrice: 55000, stock: 25 },
-          { id: 'p3', barcode: '899100100203', name: 'Tang Krimping RJ45 & RJ11 Heavy Duty', category: 'Jaringan & Wifi', costPrice: 45000, sellPrice: 70000, stock: 8 },
-          { id: 'p4', barcode: '899100100204', name: 'Charger Fast Charging 65W GaN Type-C', category: 'Aksesori HP & Laptop', costPrice: 120000, sellPrice: 175000, stock: 18 },
-          { id: 'p5', barcode: '899100100205', name: 'STB Android TV Box 4K Wireless', category: 'Elektronik Rumah', costPrice: 280000, sellPrice: 360000, stock: 4 },
-          { id: 'p6', barcode: '899100100206', name: 'Headset Gaming Surround 7.1 RGB', category: 'Aksesori HP & Laptop', costPrice: 150000, sellPrice: 220000, stock: 9 },
-          { id: 'p7', barcode: '899100100207', name: 'Stopkontak Smart Wifi Smart Plug 16A', category: 'Elektronik Rumah', costPrice: 75000, sellPrice: 110000, stock: 15 }
-        ];
+        const defaultProducts = [];
 
         const stmt = db.prepare('INSERT INTO products (id, barcode, name, category, cost_price, sell_price, stock, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
         defaultProducts.forEach(p => stmt.run(p.id, p.barcode, p.name, p.category, p.costPrice, p.sellPrice, p.stock, ''));
         stmt.finalize();
-        console.log('🌱 Seed data produk berhasil ditambahkan');
       }
     });
 

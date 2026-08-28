@@ -33,15 +33,7 @@
 
   const KASIR_ALLOWED_TABS = ['kasir-pos', 'rekap-pos', 'bayar-wifi', 'rekap-wifi'];
 
-  const DEFAULT_PRODUCTS = [
-    { id: 'p1', barcode: '899100100201', name: 'Router Wifi TP-Link Archer C6 AC1200', category: 'Jaringan & Wifi', costPrice: 320000, sellPrice: 395000, stock: 12 },
-    { id: 'p2', barcode: '899100100202', name: 'Kabel UTP Cat6 Belden 10 Meter Ready', category: 'Komponen & Kabel', costPrice: 35000, sellPrice: 55000, stock: 25 },
-    { id: 'p3', barcode: '899100100203', name: 'Tang Krimping RJ45 & RJ11 Heavy Duty', category: 'Jaringan & Wifi', costPrice: 45000, sellPrice: 70000, stock: 8 },
-    { id: 'p4', barcode: '899100100204', name: 'Charger Fast Charging 65W GaN Type-C', category: 'Aksesori HP & Laptop', costPrice: 120000, sellPrice: 175000, stock: 18 },
-    { id: 'p5', barcode: '899100100205', name: 'STB Android TV Box 4K Wireless', category: 'Elektronik Rumah', costPrice: 280000, sellPrice: 360000, stock: 4 },
-    { id: 'p6', barcode: '899100100206', name: 'Headset Gaming Surround 7.1 RGB', category: 'Aksesori HP & Laptop', costPrice: 150000, sellPrice: 220000, stock: 9 },
-    { id: 'p7', barcode: '899100100207', name: 'Stopkontak Smart Wifi Smart Plug 16A', category: 'Elektronik Rumah', costPrice: 75000, sellPrice: 110000, stock: 15 }
-  ];
+  const DEFAULT_PRODUCTS = [];
 
   const DEFAULT_CUSTOMERS = [
     { id: 'c1', name: 'Budi Santoso', address: 'Jl. Pemuda No. 45, RT 01/03', bandwidth: '20 Mbps', monthlyAmount: 150000, createdAt: '2026-01-10' },
@@ -459,15 +451,17 @@
   async function loadDataAndSyncInitial() {
     loadData();
 
-    // Check if state.products has old legacy demo items (Router Wifi, etc)
-    const hasLegacyDemo = state.products.some(p => p.id === 'p1' || p.barcode === '899100100201' || (p.name && p.name.includes('Router Wifi TP-Link')));
-    if (hasLegacyDemo || state.products.length === 0) {
+    // Permanently purge any legacy demo products (Tang Krimping, Router Wifi, etc)
+    state.products = state.products.filter(p => !['p1','p2','p3','p4','p5','p6','p7'].includes(p.id) && p.barcode !== '899100100203' && p.barcode !== '899100100201');
+    saveDataLocally(STORAGE_KEYS.PRODUCTS);
+
+    if (state.products.length === 0) {
       try {
         const res = await fetch('/data.json');
         if (res.ok) {
           const cloud = await res.json();
           if (cloud && cloud.products && cloud.products.length > 0) {
-            state.products = cloud.products;
+            state.products = cloud.products.filter(p => !['p1','p2','p3','p4','p5','p6','p7'].includes(p.id) && p.barcode !== '899100100203');
             if (cloud.categories) state.categories = cloud.categories;
             saveDataLocally(STORAGE_KEYS.PRODUCTS);
             saveDataLocally(STORAGE_KEYS.CATEGORIES);
@@ -1756,9 +1750,15 @@
         state.products.push(productObj);
       }
 
-      saveData(STORAGE_KEYS.PRODUCTS);
-      API.saveProduct(productObj);
+      // Purge any remaining demo items
+      state.products = state.products.filter(p => !['p1','p2','p3','p4','p5','p6','p7'].includes(p.id) && p.barcode !== '899100100203');
+
+      // Close modal IMMEDIATELY first
       closeModal('modalProduct');
+
+      saveData(STORAGE_KEYS.PRODUCTS);
+      try { API.saveProduct(productObj); } catch (e) {}
+
       renderProductTable();
       renderPosProducts();
     });

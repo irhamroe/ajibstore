@@ -156,15 +156,15 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <div class="dashboard-grid">
             <div class="glass-card">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                 <h3><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-pos);"></i> Riwayat Transaksi
                   Terakhir</h3>
                 <button class="btn btn-sm btn-secondary" id="btnDashViewAllTx"><i class="fa-solid fa-arrow-right"></i>
                   Lihat Semua</button>
               </div>
-              <div class="table-responsive" style="max-height: 290px;">
+              <div class="table-responsive" style="max-height: 290px; overflow-y: auto;">
                 <table class="custom-table">
                   <thead>
                     <tr>

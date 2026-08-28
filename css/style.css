@@ -479,12 +479,27 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* 2 Column Grid Utility */
+/* 2 Column & Dashboard Grid Utilities */
 .grid-2-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   align-items: start;
+}
+
+.grid-2-col > * {
+  min-width: 0;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.dashboard-grid > * {
+  min-width: 0;
 }
 
 /* ==========================================================================
@@ -497,6 +512,10 @@ body {
   padding: 22px;
   box-shadow: var(--shadow-sm);
   transition: var(--transition-normal);
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .glass-card:hover {
@@ -737,7 +756,11 @@ body {
    Tables
    ========================================================================== */
 .table-responsive {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  display: block;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
@@ -820,6 +843,10 @@ body {
   grid-template-columns: 1fr 370px;
   gap: 20px;
   align-items: start;
+}
+
+.pos-layout > * {
+  min-width: 0;
 }
 
 .product-grid {
@@ -923,9 +950,10 @@ body {
 .pos-cart-panel {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 120px);
+  max-height: calc(100vh - 100px);
   position: sticky;
   top: 85px;
+  box-sizing: border-box;
 }
 
 .cart-items-list {
@@ -1528,6 +1556,7 @@ body {
 
   /* Grid Layouts to 1 column */
   .grid-2-col,
+  .dashboard-grid,
   #tab-bayar-wifi > div,
   #tab-dashboard > div:last-child {
     grid-template-columns: 1fr !important;

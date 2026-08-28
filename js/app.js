@@ -57,6 +57,42 @@
   };
 
   // ==========================================
+  // Modern Toast Notification Helper
+  // ==========================================
+  function showToast(message, type = 'success', duration = 3500) {
+    const container = document.getElementById('toastContainer');
+    if (!container) {
+      alert(message);
+      return;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast-item ${type}`;
+
+    let iconClass = 'fa-circle-check';
+    if (type === 'error') iconClass = 'fa-circle-xmark';
+    if (type === 'warning') iconClass = 'fa-triangle-exclamation';
+    if (type === 'info') iconClass = 'fa-circle-info';
+
+    toast.innerHTML = `
+      <i class="fa-solid ${iconClass} toast-icon"></i>
+      <div class="toast-message">${message}</div>
+    `;
+
+    container.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
+    });
+
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => {
+        toast.remove();
+      }, 400);
+    }, duration);
+  }
+
+  // ==========================================
   // 1B. API Client for SQLite Synchronization
   // ==========================================
   // ==========================================
@@ -1982,10 +2018,18 @@
     });
 
     // Realtime Change Calculator
-    document.getElementById('checkoutCash').addEventListener('input', updateCheckoutChange);
+    const cashInput = document.getElementById('checkoutCash');
+    if (cashInput) cashInput.addEventListener('input', updateCheckoutChange);
 
-    // Confirm Checkout Process
-    document.getElementById('btnConfirmCheckout').addEventListener('click', executeCheckout);
+    // Confirm Checkout Process (Pay Only vs Pay & Print)
+    const btnPayOnly = document.getElementById('btnConfirmCheckoutPayOnly');
+    const btnPayAndPrint = document.getElementById('btnConfirmCheckoutPayAndPrint');
+    if (btnPayOnly) {
+      btnPayOnly.addEventListener('click', () => executeCheckout(false));
+    }
+    if (btnPayAndPrint) {
+      btnPayAndPrint.addEventListener('click', () => executeCheckout(true));
+    }
   }
 
   function startCameraScanner() {
@@ -2164,12 +2208,13 @@
     changeDisplay.textContent = formatRupiah(change > 0 ? change : 0);
   }
 
-  function executeCheckout() {
+  function executeCheckout(shouldPrint = false) {
     const grandTotal = calculateCartGrandTotal();
-    const cash = parseFloat(document.getElementById('checkoutCash').value || 0);
+    const cashInput = document.getElementById('checkoutCash');
+    const cash = parseFloat(cashInput ? cashInput.value : 0) || 0;
 
     if (cash < grandTotal) {
-      alert('Nominal pembayaran kurang dari total tagihan!');
+      showToast('Nominal pembayaran kurang dari total tagihan!', 'error');
       return;
     }
 
@@ -2189,7 +2234,7 @@
     state.cart.forEach(c => {
       const prod = state.products.find(p => p.id === c.product.id);
       if (prod) {
-        prod.stock -= c.qty;
+        prod.stock = Math.max(0, prod.stock - c.qty);
       }
     });
     saveData(STORAGE_KEYS.PRODUCTS);
@@ -2212,13 +2257,18 @@
 
     // Reset Cart & Close Modal
     state.cart = [];
+    if (cashInput) cashInput.value = '';
     renderCart();
     renderPosProducts();
     closeModal('modalCheckout');
 
-    // Display Printable Receipt
-    renderPosReceipt(transaction);
-    openModal('modalPosReceipt');
+    if (shouldPrint) {
+      renderPosReceipt(transaction);
+      openModal('modalPosReceipt');
+      showToast('Transaksi & Struk berhasil dibuat!', 'success');
+    } else {
+      showToast(`Pembayaran ${formatRupiah(grandTotal)} berhasil! Kembalian: ${formatRupiah(change)}`, 'success', 4000);
+    }
   }
 
   function renderPosReceipt(tx) {

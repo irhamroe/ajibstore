@@ -24,13 +24,15 @@
   <!-- Application Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="icon" type="image/jpeg" href="favicon.jpg">
-  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-  <link rel="apple-touch-icon" href="favicon.jpg">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%230f172a'/><path d='M55 12 L22 56 H48 L41 88 L78 44 H52 Z' fill='%23f59e0b'/></svg>">
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <link rel="icon" type="image/jpeg" href="./favicon.jpg">
+  <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
+  <link rel="apple-touch-icon" href="./favicon.jpg">
 </head>
 
 <body>
+  <div id="toastContainer" class="toast-container"></div>
   <div class="app-container">
     <!-- Sidebar Navigation -->
     <aside class="sidebar" id="sidebar">
@@ -774,10 +776,14 @@
             0</span>
         </div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
         <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalCheckout">Batal</button>
-        <button type="button" class="btn btn-primary" id="btnConfirmCheckout"><i class="fa-solid fa-print"></i> Bayar &
-          Cetak Struk</button>
+        <button type="button" class="btn btn-success" id="btnConfirmCheckoutPayOnly" style="background: #10b981; border-color: #10b981; color: #fff;">
+          <i class="fa-solid fa-circle-check"></i> Selesaikan Pembayaran
+        </button>
+        <button type="button" class="btn btn-primary" id="btnConfirmCheckoutPayAndPrint">
+          <i class="fa-solid fa-print"></i> Bayar & Cetak Struk
+        </button>
       </div>
     </div>
   </div>

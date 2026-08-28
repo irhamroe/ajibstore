@@ -62,8 +62,8 @@
   // ==========================================
   // 1B-2. Firebase Realtime Database Live Sync
   // ==========================================
-  const FIREBASE_DB_URL_KEY = 'ajib_store_firebase_db_url_v2';
-  const DEFAULT_FIREBASE_DB_URL = 'https://ajibstore-pos-default-rtdb.asia-southeast1.firebasedatabase.app';
+  const FIREBASE_DB_URL_KEY = 'ajib_store_firebase_db_url_v3';
+  const DEFAULT_FIREBASE_DB_URL = 'https://ajibstore-a49eb-default-rtdb.asia-southeast1.firebasedatabase.app';
   let firebaseDbRef = null;
   let isFirebaseSyncActive = false;
 

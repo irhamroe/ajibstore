@@ -1516,10 +1516,19 @@ body {
     padding: 28px 20px;
     border-radius: var(--radius-lg);
   }
+
+  /* Prevent auto-zoom on mobile inputs */
+  .form-control, input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Extra Small Phones (max-width: 480px) */
 @media (max-width: 480px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   .stat-grid {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
@@ -1545,7 +1554,8 @@ body {
   }
 
   .btn {
-    padding: 8px 14px;
-    font-size: 0.82rem;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    min-height: 40px;
   }
 }

@@ -325,6 +325,13 @@
     const textEl = document.getElementById('syncStatusText');
     if (!badge || !textEl) return;
 
+    if (isFirebaseSyncActive) {
+      badge.className = 'connection-status-widget connected';
+      textEl.textContent = 'Cloud Sync';
+      serverInfoData = { isFirebase: true };
+      return;
+    }
+
     if (!API.isServer) {
       badge.className = 'connection-status-widget offline';
       textEl.textContent = 'Offline (File)';
@@ -338,9 +345,15 @@
       badge.className = 'connection-status-widget connected';
       textEl.textContent = 'Server Sync';
     } else {
-      badge.className = 'connection-status-widget offline';
-      textEl.textContent = 'Terputus';
-      serverInfoData = { isServer: false };
+      if (window.location.hostname.endsWith('.vercel.app') || window.location.hostname.endsWith('.github.io')) {
+        badge.className = 'connection-status-widget connected';
+        textEl.textContent = 'Vercel Online';
+        serverInfoData = { isVercel: true };
+      } else {
+        badge.className = 'connection-status-widget offline';
+        textEl.textContent = 'Terputus';
+        serverInfoData = { isServer: false };
+      }
     }
   }
 
@@ -350,7 +363,22 @@
 
     const currentCloudUrl = getApiBaseUrl();
 
-    if (serverInfoData && serverInfoData.isServer) {
+    if (serverInfoData && (serverInfoData.isFirebase || serverInfoData.isVercel)) {
+      content.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;">
+          <i class="fa-solid fa-cloud-arrow-up" style="color: #059669; font-size: 1.5rem;"></i>
+          <div>
+            <div style="font-weight: 700; color: #065f46;">Vercel Live Cloud Sync Aktif!</div>
+            <div style="font-size: 0.8rem; color: #047857;">Situs berjalan di Vercel (ajibstore.vercel.app). Data barang & transaksi tersinkronisasi otomatis secara real-time di semua HP & Laptop!</div>
+          </div>
+        </div>
+
+        <div style="font-size: 0.85rem; color: #334155; line-height: 1.6;">
+          <strong>Informasi Akses:</strong><br>
+          Buka <strong>https://ajibstore.vercel.app</strong> dari perangkat mana saja (HP, Laptop, Tablet). Tambahkan barang dari laptop dan barang akan otomatis muncul di HP!
+        </div>
+      `;
+    } else if (serverInfoData && serverInfoData.isServer) {
       const port = serverInfoData.port || 3000;
       const ips = serverInfoData.ips || [];
       

@@ -275,6 +275,20 @@
       } catch (e) { console.error('API saveWifiTransaction error:', e); }
     },
 
+    async deletePosTransaction(id) {
+      if (!this.isServer && !getApiBaseUrl()) return;
+      try {
+        await fetch(`${getApiBaseUrl()}/api/pos-transactions/${id}`, { method: 'DELETE' });
+      } catch (e) { console.error('API deletePosTransaction error:', e); }
+    },
+
+    async deleteWifiTransaction(id) {
+      if (!this.isServer && !getApiBaseUrl()) return;
+      try {
+        await fetch(`${getApiBaseUrl()}/api/wifi-transactions/${id}`, { method: 'DELETE' });
+      } catch (e) { console.error('API deleteWifiTransaction error:', e); }
+    },
+
     async saveUser(user) {
       if (!this.isServer && !getApiBaseUrl()) return;
       try {
@@ -996,6 +1010,32 @@
     renderDashboardRecentTx();
   }
 
+  function deletePosTx(id) {
+    const tx = state.posTx.find(t => t.id === id);
+    if (!tx) return;
+    if (confirm(`Apakah Anda yakin ingin menghapus transaksi toko (No. Nota: ${tx.receiptNo})?`)) {
+      state.posTx = state.posTx.filter(t => t.id !== id);
+      saveData(STORAGE_KEYS.POS_TX);
+      API.deletePosTransaction(id);
+      renderDashboard();
+      if (state.activeTab === 'rekap-pos') renderRekapPos();
+    }
+  }
+
+  function deleteWifiTx(id) {
+    const tx = state.wifiTx.find(t => t.id === id);
+    if (!tx) return;
+    if (confirm(`Apakah Anda yakin ingin menghapus pembayaran Wifi pelanggan "${tx.customerName}" (Periode ${tx.periodMonth})?`)) {
+      state.wifiTx = state.wifiTx.filter(t => t.id !== id);
+      saveData(STORAGE_KEYS.WIFI_TX);
+      API.deleteWifiTransaction(id);
+      renderDashboard();
+      if (state.activeTab === 'rekap-wifi') renderRekapWifi();
+      if (state.activeTab === 'pelanggan-wifi') renderWifiCustomers();
+      if (state.activeTab === 'bayar-wifi') renderRecentWifiPayments();
+    }
+  }
+
   function renderDashboardRecentTx() {
     const tbody = document.getElementById('dashRecentTxTableBody');
     if (!tbody) return;
@@ -1024,7 +1064,7 @@
     const recents = combinedTx.slice(0, 6);
 
     if (recents.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 25px;">Belum ada riwayat transaksi.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 25px;">Belum ada riwayat transaksi.</td></tr>`;
       return;
     }
 
@@ -1040,8 +1080,44 @@
         <td style="font-weight: 700; color: ${t.type === 'wifi' ? 'var(--accent-wifi)' : 'var(--accent-pos)'};">
           ${formatRupiah(t.amount)}
         </td>
+        <td style="text-align: right;">
+          <div style="display: inline-flex; gap: 4px;">
+            <button class="btn btn-sm btn-secondary btn-print-dash-tx" data-id="${t.id}" data-type="${t.type}" title="Cetak Struk">
+              <i class="fa-solid fa-print"></i>
+            </button>
+            <button class="btn btn-sm btn-danger btn-del-dash-tx" data-id="${t.id}" data-type="${t.type}" title="Hapus Transaksi">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </td>
       </tr>
     `).join('');
+
+    tbody.querySelectorAll('.btn-print-dash-tx').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        const type = b.getAttribute('data-type');
+        if (type === 'pos') {
+          const tx = state.posTx.find(t => t.id === id);
+          if (tx) { renderPosReceipt(tx); openModal('modalPosReceipt'); }
+        } else {
+          const tx = state.wifiTx.find(t => t.id === id);
+          if (tx) { renderWifiReceipt(tx); openModal('modalWifiReceipt'); }
+        }
+      });
+    });
+
+    tbody.querySelectorAll('.btn-del-dash-tx').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        const type = b.getAttribute('data-type');
+        if (type === 'pos') {
+          deletePosTx(id);
+        } else {
+          deleteWifiTx(id);
+        }
+      });
+    });
   }
 
   // ==========================================
@@ -1824,9 +1900,14 @@
           <td style="font-weight: 700; color: #34d399;">${formatRupiah(t.total)}</td>
           <td><span class="badge badge-success">Tunai</span></td>
           <td style="text-align: right;">
-            <button class="btn btn-sm btn-secondary btn-view-pos-receipt" data-id="${t.id}">
-              <i class="fa-solid fa-print"></i> Struk
-            </button>
+            <div style="display: inline-flex; gap: 6px;">
+              <button class="btn btn-sm btn-secondary btn-view-pos-receipt" data-id="${t.id}" title="Lihat/Cetak Struk">
+                <i class="fa-solid fa-print"></i> Struk
+              </button>
+              <button class="btn btn-sm btn-danger btn-del-pos-tx" data-id="${t.id}" title="Hapus Transaksi">
+                <i class="fa-solid fa-trash"></i> Hapus
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -1840,6 +1921,13 @@
           renderPosReceipt(tx);
           openModal('modalPosReceipt');
         }
+      });
+    });
+
+    tbody.querySelectorAll('.btn-del-pos-tx').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        deletePosTx(id);
       });
     });
   }
@@ -2338,9 +2426,14 @@
         <td><span class="badge badge-success">${t.periodMonth}</span></td>
         <td style="font-weight: 700; color: #34d399;">${formatRupiah(t.amount)}</td>
         <td style="text-align: right;">
-          <button class="btn btn-sm btn-secondary btn-view-wifi-receipt" data-id="${t.id}">
-            <i class="fa-solid fa-print"></i> Struk
-          </button>
+          <div style="display: inline-flex; gap: 6px;">
+            <button class="btn btn-sm btn-secondary btn-view-wifi-receipt" data-id="${t.id}" title="Lihat/Cetak Struk">
+              <i class="fa-solid fa-print"></i> Struk
+            </button>
+            <button class="btn btn-sm btn-danger btn-del-wifi-tx" data-id="${t.id}" title="Hapus Transaksi">
+              <i class="fa-solid fa-trash"></i> Hapus
+            </button>
+          </div>
         </td>
       </tr>
     `).join('');
@@ -2353,6 +2446,13 @@
           renderWifiReceipt(tx);
           openModal('modalWifiReceipt');
         }
+      });
+    });
+
+    tbody.querySelectorAll('.btn-del-wifi-tx').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        deleteWifiTx(id);
       });
     });
   }

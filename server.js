@@ -362,6 +362,13 @@ app.post('/api/pos-transactions', (req, res) => {
   });
 });
 
+app.delete('/api/pos-transactions/:id', (req, res) => {
+  db.run('DELETE FROM pos_transactions WHERE id = ?', [req.params.id], function (err) {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+    res.json({ success: true, message: 'Transaksi POS berhasil dihapus' });
+  });
+});
+
 // --- 5. Wifi Transactions API ---
 app.get('/api/wifi-transactions', (req, res) => {
   db.all('SELECT * FROM wifi_transactions ORDER BY timestamp DESC', [], (err, rows) => {
@@ -402,6 +409,13 @@ app.post('/api/wifi-transactions', (req, res) => {
       });
     }
   );
+});
+
+app.delete('/api/wifi-transactions/:id', (req, res) => {
+  db.run('DELETE FROM wifi_transactions WHERE id = ?', [req.params.id], function (err) {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+    res.json({ success: true, message: 'Transaksi Wifi berhasil dihapus' });
+  });
 });
 
 // --- 6. Users API ---

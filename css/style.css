@@ -1361,41 +1361,62 @@ body {
 
   /* Content Body */
   .content-body {
-    padding: 14px;
+    padding: 12px;
     padding-bottom: 30px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
-  /* Stat Grid: 2 columns on mobile */
+  /* Stat Grid: 2 columns with minmax(0, 1fr) to prevent overflow */
   .stat-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
     margin-bottom: 16px;
+    width: 100%;
   }
 
   .stat-card {
-    padding: 12px 14px;
-    gap: 10px;
+    padding: 10px 10px;
+    gap: 8px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .stat-details {
+    min-width: 0;
+    overflow: hidden;
   }
 
   .stat-icon {
-    width: 38px;
-    height: 38px;
-    font-size: 1.1rem;
-    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    flex-shrink: 0;
   }
 
   .stat-value {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .stat-details h3 {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Glass Card padding */
   .glass-card {
-    padding: 16px;
+    padding: 14px;
     border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   /* Filter Bar on Mobile */
@@ -1426,20 +1447,25 @@ body {
     justify-content: center;
   }
 
-  /* Tables with horizontal scroll touch */
+  /* Tables with smooth horizontal touch scroll */
   .table-responsive {
     border-radius: var(--radius-sm);
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
     -webkit-overflow-scrolling: touch;
   }
 
   .custom-table {
-    min-width: 540px;
-    font-size: 0.82rem;
+    width: 100%;
+    min-width: 480px;
+    font-size: 0.8rem;
   }
 
   .custom-table th,
   .custom-table td {
-    padding: 10px 12px;
+    padding: 8px 10px;
   }
 
   /* POS Cashier on Mobile */
@@ -1530,17 +1556,21 @@ body {
   }
 
   .stat-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
   }
 
   .stat-card {
-    padding: 10px 10px;
-    gap: 8px;
+    padding: 8px 8px;
+    gap: 6px;
   }
 
   .stat-value {
-    font-size: 0.95rem;
+    font-size: 0.88rem;
+  }
+
+  .stat-details h3 {
+    font-size: 0.6rem;
   }
 
   .product-grid {

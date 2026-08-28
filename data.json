@@ -1,0 +1,35 @@
+{
+  "products": [
+    {
+      "id": "p_1787885000001",
+      "barcode": "SKU977132",
+      "name": "Lampu LED Renesola 9 Watt",
+      "category": "Elektronik Rumah",
+      "costPrice": 25000,
+      "sellPrice": 30000,
+      "stock": 15,
+      "image": ""
+    },
+    {
+      "id": "p_1787885000002",
+      "barcode": "SKU859297",
+      "name": "Lampu LED Hannochs 22 Watt",
+      "category": "Elektronik Rumah",
+      "costPrice": 40000,
+      "sellPrice": 50000,
+      "stock": 20,
+      "image": ""
+    }
+  ],
+  "categories": [
+    "Aksesori HP & Laptop",
+    "Jaringan & Wifi",
+    "Elektronik Rumah",
+    "Komponen & Kabel"
+  ],
+  "customers": [],
+  "posTx": [],
+  "wifiTx": [],
+  "users": [],
+  "updatedAt": 1787885600000
+}

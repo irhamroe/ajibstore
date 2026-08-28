@@ -456,6 +456,29 @@
     }
   }
 
+  async function loadDataAndSyncInitial() {
+    loadData();
+
+    // Check if state.products has old legacy demo items (Router Wifi, etc)
+    const hasLegacyDemo = state.products.some(p => p.id === 'p1' || p.barcode === '899100100201' || (p.name && p.name.includes('Router Wifi TP-Link')));
+    if (hasLegacyDemo || state.products.length === 0) {
+      try {
+        const res = await fetch('/data.json');
+        if (res.ok) {
+          const cloud = await res.json();
+          if (cloud && cloud.products && cloud.products.length > 0) {
+            state.products = cloud.products;
+            if (cloud.categories) state.categories = cloud.categories;
+            saveDataLocally(STORAGE_KEYS.PRODUCTS);
+            saveDataLocally(STORAGE_KEYS.CATEGORIES);
+            renderCategoryDropdowns();
+            renderTabViews(state.activeTab);
+          }
+        }
+      } catch (e) {}
+    }
+  }
+
   let serverInfoData = null;
 
   async function updateServerConnectionStatus() {
@@ -2809,7 +2832,7 @@
   // 10. Application Initialization
   // ==========================================
   document.addEventListener('DOMContentLoaded', () => {
-    loadData();
+    loadDataAndSyncInitial();
     initAuth();
     initNavigation();
     initCategoryManagement();

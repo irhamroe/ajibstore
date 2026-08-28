@@ -723,18 +723,24 @@ function getLocalIpAddresses() {
   return addresses;
 }
 
-// Start Server
-app.listen(PORT, '0.0.0.0', () => {
-  const ips = getLocalIpAddresses();
-  console.log('\n======================================================');
-  console.log('🚀 SERVER POS & BILLING AJIB STORE TELAH BERJALAN!');
-  console.log('======================================================');
-  console.log(`💻 Buka di Laptop   : http://localhost:${PORT}`);
-  if (ips.length > 0) {
-    ips.forEach(ip => {
-      console.log(`📱 Buka di HP/Tablet: http://${ip}:${PORT}`);
-    });
-  }
-  console.log('📂 Database Mode    : ' + (usePostgres ? '⚡ Neon Cloud PostgreSQL' : '📂 SQLite Lokal (' + DB_PATH + ')'));
-  console.log('======================================================\n');
-});
+// Export Express app for Vercel Serverless Function environment
+module.exports = app;
+
+// Start Server locally if not running on Vercel
+if (!process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
+    const ips = getLocalIpAddresses();
+    console.log('\n======================================================');
+    console.log('🚀 SERVER POS & BILLING AJIB STORE TELAH BERJALAN!');
+    console.log('======================================================');
+    console.log(`💻 Buka di Laptop   : http://localhost:${PORT}`);
+    if (ips.length > 0) {
+      ips.forEach(ip => {
+        console.log(`📱 Buka di HP/Tablet: http://${ip}:${PORT}`);
+      });
+    }
+    console.log('📂 Database Mode    : ' + (usePostgres ? '⚡ Neon Cloud PostgreSQL' : '📂 SQLite Lokal (' + DB_PATH + ')'));
+    console.log('======================================================\n');
+  });
+}
+

@@ -1583,25 +1583,6 @@
     document.getElementById('searchProductInput').addEventListener('input', renderProductTable);
     document.getElementById('filterProductCategory').addEventListener('change', renderProductTable);
 
-    const btnClearAll = document.getElementById('btnClearAllProducts');
-    if (btnClearAll) {
-      btnClearAll.addEventListener('click', () => {
-        if (state.products.length === 0) {
-          alert('Stok barang sudah kosong!');
-          return;
-        }
-        if (confirm('PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA BARANG dari stok? Tindakan ini akan mengosongkan seluruh stok barang di laptop & HP.')) {
-          state.products = [];
-          localStorage.setItem(HAS_SEEDED_KEY, 'true');
-          saveData(STORAGE_KEYS.PRODUCTS);
-          API.clearAllProducts();
-          renderProductTable();
-          renderPosProducts();
-          alert('Seluruh stok barang berhasil di-reset dan dihapus!');
-        }
-      });
-    }
-
     // Edit Product Click Handler
     window.setProductImageHelper = setProdImagePreview;
   }

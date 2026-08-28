@@ -79,6 +79,12 @@ h1, h2, h3, h4, h5, h6, .brand-text {
   letter-spacing: -0.02em;
 }
 
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-body);
@@ -116,6 +122,9 @@ body {
   min-height: 100vh;
   position: relative;
   background-color: transparent;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* Sidebar Navigation */
@@ -1281,22 +1290,8 @@ body {
    RESPONSIVE DESIGN (Tablets & Mobile Handphones)
    ========================================================================== */
 
-/* Tablets & Small Laptops (max-width: 1024px) */
+/* Mobile & Tablet Handphones (max-width: 1024px) */
 @media (max-width: 1024px) {
-  .pos-layout {
-    grid-template-columns: 1fr;
-  }
-  .pos-cart-panel {
-    height: auto;
-    position: static;
-  }
-  .stat-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* Mobile Handphones (max-width: 768px) */
-@media (max-width: 768px) {
   :root {
     --header-height: 60px;
   }
@@ -1313,17 +1308,21 @@ body {
   }
 
   .main-wrapper {
-    margin-left: 0;
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden;
   }
 
   /* Header adjustments */
   .top-header {
     padding: 0 14px;
     height: var(--header-height);
+    width: 100%;
   }
 
   .mobile-toggle {
-    display: flex;
+    display: flex !important;
   }
 
   .page-title h1 {

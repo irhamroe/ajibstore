@@ -86,17 +86,17 @@
       firebaseDbRef = firebase.database().ref('ajibstore');
       isFirebaseSyncActive = true;
 
-      // Listen for real-time changes across devices
+      // Listen for real-time changes across devices via Firebase Realtime Cloud Database
       firebaseDbRef.on('value', (snapshot) => {
         const val = snapshot.val();
         if (val) {
           let changed = false;
-          if (val.products && JSON.stringify(state.products) !== JSON.stringify(val.products)) { state.products = val.products; changed = true; }
-          if (val.categories && JSON.stringify(state.categories) !== JSON.stringify(val.categories)) { state.categories = val.categories; changed = true; }
-          if (val.customers && JSON.stringify(state.customers) !== JSON.stringify(val.customers)) { state.customers = val.customers; changed = true; }
-          if (val.posTx && JSON.stringify(state.posTx) !== JSON.stringify(val.posTx)) { state.posTx = val.posTx; changed = true; }
-          if (val.wifiTx && JSON.stringify(state.wifiTx) !== JSON.stringify(val.wifiTx)) { state.wifiTx = val.wifiTx; changed = true; }
-          if (val.users && JSON.stringify(state.users) !== JSON.stringify(val.users)) { state.users = val.users; changed = true; }
+          if (val.products && Array.isArray(val.products) && JSON.stringify(state.products) !== JSON.stringify(val.products)) { state.products = val.products; changed = true; }
+          if (val.categories && Array.isArray(val.categories) && JSON.stringify(state.categories) !== JSON.stringify(val.categories)) { state.categories = val.categories; changed = true; }
+          if (val.customers && Array.isArray(val.customers) && JSON.stringify(state.customers) !== JSON.stringify(val.customers)) { state.customers = val.customers; changed = true; }
+          if (val.posTx && Array.isArray(val.posTx) && JSON.stringify(state.posTx) !== JSON.stringify(val.posTx)) { state.posTx = val.posTx; changed = true; }
+          if (val.wifiTx && Array.isArray(val.wifiTx) && JSON.stringify(state.wifiTx) !== JSON.stringify(val.wifiTx)) { state.wifiTx = val.wifiTx; changed = true; }
+          if (val.users && Array.isArray(val.users) && JSON.stringify(state.users) !== JSON.stringify(val.users)) { state.users = val.users; changed = true; }
 
           if (changed) {
             saveDataLocally(STORAGE_KEYS.PRODUCTS);
@@ -109,6 +109,9 @@
             renderCategoryDropdowns();
             renderTabViews(state.activeTab);
           }
+        } else {
+          // Push initial seed data to Firebase if cloud database is empty
+          pushToFirebase();
         }
       });
     } catch (e) {

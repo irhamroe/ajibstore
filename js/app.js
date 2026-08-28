@@ -494,7 +494,141 @@
         }
       } catch (e) {}
     }
+  }  let firebaseErrorMsg = '';
+
+  function initFirebaseRealtimeSync() {
+    if (typeof firebase === 'undefined') return;
+
+    const dbUrl = getFirebaseDbUrl();
+    if (!dbUrl) return;
+
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp({
+          databaseURL: dbUrl
+        });
+      }
+      firebaseDbRef = firebase.database().ref('ajibstore');
+      isFirebaseSyncActive = true;
+      firebaseErrorMsg = '';
+
+      // Single Source of Truth: Listen for real-time changes across all devices via Firebase Realtime Cloud
+      firebaseDbRef.on('value', (snapshot) => {
+        const val = snapshot.val();
+        firebaseErrorMsg = '';
+        updateServerConnectionStatus();
+
+        if (val) {
+          state.products = Array.isArray(val.products) ? val.products : [];
+          state.categories = Array.isArray(val.categories) ? val.categories : [];
+          state.customers = Array.isArray(val.customers) ? val.customers : [];
+          state.posTx = Array.isArray(val.posTx) ? val.posTx : [];
+          state.wifiTx = Array.isArray(val.wifiTx) ? val.wifiTx : [];
+          state.users = Array.isArray(val.users) ? val.users : [];
+
+          saveDataLocally(STORAGE_KEYS.PRODUCTS);
+          saveDataLocally(STORAGE_KEYS.CATEGORIES);
+          saveDataLocally(STORAGE_KEYS.CUSTOMERS);
+          saveDataLocally(STORAGE_KEYS.POS_TX);
+          saveDataLocally(STORAGE_KEYS.WIFI_TX);
+          saveDataLocally(STORAGE_KEYS.USERS_LIST);
+
+          renderCategoryDropdowns();
+          renderTabViews(state.activeTab);
+        } else {
+          // Push initial data if cloud database is completely empty
+          pushToFirebase();
+        }
+      }, (err) => {
+        console.error('Firebase sync error:', err);
+        isFirebaseSyncActive = false;
+        firebaseErrorMsg = err.message || 'Permission Denied / Rules Firebase Terkunci';
+        updateServerConnectionStatus();
+      });
+    } catch (e) {
+      console.warn('Firebase sync error:', e);
+      isFirebaseSyncActive = false;
+      firebaseErrorMsg = e.message;
+      updateServerConnectionStatus();
+    }
   }
+
+  // BroadcastChannel for instant cross-tab sync on same device
+  const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ajibstore_broadcast_sync') : null;
+
+  if (syncChannel) {
+    syncChannel.onmessage = (e) => {
+      if (e.data === 'sync') {
+        loadData();
+        renderCategoryDropdowns();
+        renderTabViews(state.activeTab);
+      }
+    };
+  }
+
+  function pushToFirebase() {
+    if (firebaseDbRef && isFirebaseSyncActive) {
+      try {
+        firebaseDbRef.set({
+          products: state.products || [],
+          categories: state.categories || [],
+          customers: state.customers || [],
+          posTx: state.posTx || [],
+          wifiTx: state.wifiTx || [],
+          users: state.users || []
+        });
+      } catch (e) {
+        console.error('Firebase push error:', e);
+      }
+    }
+  }
+
+  const CUSTOM_BACKEND_URL_KEY = 'ajib_store_cloud_backend_url_v1';
+
+  function getApiBaseUrl() {
+    const custom = localStorage.getItem(CUSTOM_BACKEND_URL_KEY);
+    if (custom) return custom.replace(/\/+$/, '');
+    return '';
+  }
+
+  const API = {
+    isServer: window.location.protocol.startsWith('http'),
+
+    async getServerInfo() {
+      if (!this.isServer && !getApiBaseUrl()) return null;
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/server-info`);
+        return await res.json();
+      } catch (e) {
+        return null;
+      }
+    },
+
+    async fetchAll() {
+      if (!this.isServer && !getApiBaseUrl()) return null;
+      const baseUrl = getApiBaseUrl();
+      try {
+        const [prods, cats, custs, posTx, wifiTx, users] = await Promise.all([
+          fetch(`${baseUrl}/api/products`).then(r => r.json()),
+          fetch(`${baseUrl}/api/categories`).then(r => r.json()),
+          fetch(`${baseUrl}/api/customers`).then(r => r.json()),
+          fetch(`${baseUrl}/api/pos-transactions`).then(r => r.json()),
+          fetch(`${baseUrl}/api/wifi-transactions`).then(r => r.json()),
+          fetch(`${baseUrl}/api/users`).then(r => r.json())
+        ]);
+        return {
+          products: prods.success ? prods.data : null,
+          categories: cats.success ? cats.data : null,
+          customers: custs.success ? custs.data : null,
+          posTx: posTx.success ? posTx.data : null,
+          wifiTx: wifiTx.success ? wifiTx.data : null,
+          users: users.success ? users.data : null
+        };
+      } catch (err) {
+        return null;
+      }
+    }
+  };
 
   let serverInfoData = null;
 
@@ -503,35 +637,28 @@
     const textEl = document.getElementById('syncStatusText');
     if (!badge || !textEl) return;
 
-    if (isFirebaseSyncActive) {
+    if (isFirebaseSyncActive && !firebaseErrorMsg) {
       badge.className = 'connection-status-widget connected';
-      textEl.textContent = 'Cloud Sync';
+      textEl.textContent = 'Firebase Cloud';
       serverInfoData = { isFirebase: true };
       return;
     }
 
-    if (!API.isServer) {
+    if (firebaseErrorMsg) {
       badge.className = 'connection-status-widget offline';
-      textEl.textContent = 'Offline (File)';
-      serverInfoData = { isServer: false };
+      textEl.textContent = 'Firebase Terkunci';
+      serverInfoData = { isFirebase: false, error: firebaseErrorMsg };
       return;
     }
 
-    const info = await API.getServerInfo();
-    if (info && info.success) {
-      serverInfoData = { isServer: true, ...info };
+    if (window.location.hostname.endsWith('.vercel.app') || window.location.hostname.endsWith('.github.io')) {
       badge.className = 'connection-status-widget connected';
-      textEl.textContent = 'Server Sync';
+      textEl.textContent = 'Vercel Online';
+      serverInfoData = { isVercel: true };
     } else {
-      if (window.location.hostname.endsWith('.vercel.app') || window.location.hostname.endsWith('.github.io')) {
-        badge.className = 'connection-status-widget connected';
-        textEl.textContent = 'Vercel Online';
-        serverInfoData = { isVercel: true };
-      } else {
-        badge.className = 'connection-status-widget offline';
-        textEl.textContent = 'Terputus';
-        serverInfoData = { isServer: false };
-      }
+      badge.className = 'connection-status-widget offline';
+      textEl.textContent = 'Terputus';
+      serverInfoData = { isServer: false };
     }
   }
 
@@ -539,110 +666,93 @@
     const content = document.getElementById('serverInfoModalContent');
     if (!content) return;
 
-    const currentCloudUrl = getApiBaseUrl();
+    const currentFirebaseUrl = getFirebaseDbUrl();
 
-    if (serverInfoData && (serverInfoData.isFirebase || serverInfoData.isVercel)) {
-      content.innerHTML = `
+    let statusHeader = '';
+    if (isFirebaseSyncActive && !firebaseErrorMsg) {
+      statusHeader = `
         <div style="display: flex; align-items: center; gap: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;">
           <i class="fa-solid fa-cloud-arrow-up" style="color: #059669; font-size: 1.5rem;"></i>
           <div>
-            <div style="font-weight: 700; color: #065f46;">Vercel Live Cloud Sync Aktif!</div>
-            <div style="font-size: 0.8rem; color: #047857;">Situs berjalan di Vercel (ajibstore.vercel.app). Data barang & transaksi tersinkronisasi otomatis secara real-time di semua HP & Laptop!</div>
-          </div>
-        </div>
-
-        <hr style="margin: 16px 0; border: none; border-top: 1px dashed #cbd5e1;">
-
-        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #1e293b;">Transfer Instant Data HP & Laptop (1-Klik):</h4>
-        <p style="font-size: 0.82rem; color: #475569; margin-bottom: 10px;">
-          Salin kode sinkronisasi dari Laptop dan tempel di HP Anda untuk menyalin seluruh stok barang secara instan:
-        </p>
-
-        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-          <button type="button" class="btn btn-secondary" id="btnExportSyncToken" style="flex: 1;">
-            <i class="fa-solid fa-copy"></i> Salin Data Laptop
-          </button>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 8px;">
-          <input type="text" id="inputImportSyncToken" class="form-control" placeholder="Tempel kode sync dari laptop di sini...">
-        </div>
-        <button type="button" class="btn btn-primary" id="btnImportSyncToken" style="width: 100%;">
-          <i class="fa-solid fa-download"></i> Terapkan Data ke HP Ini
-        </button>
-      `;
-    } else if (serverInfoData && serverInfoData.isServer) {
-      const port = serverInfoData.port || 3000;
-      const ips = serverInfoData.ips || [];
-      
-      let ipsHtml = '';
-      if (ips.length > 0) {
-        ipsHtml = ips.map(ip => `
-          <div style="background: #eff6ff; border: 1px dashed #3b82f6; padding: 12px; border-radius: 8px; margin-top: 8px; word-break: break-all;">
-            <div style="font-size: 0.75rem; color: #1e40af; font-weight: 600; text-transform: uppercase;">URL Handphone / Tablet (Lokal Wifi)</div>
-            <div style="font-size: 1.1rem; font-weight: 700; color: #1d4ed8; font-family: monospace; margin-top: 2px;">
-              http://${ip}:${port}
-            </div>
-          </div>
-        `).join('');
-      } else {
-        ipsHtml = `<div style="color: #64748b; font-size: 0.85rem;">Tidak ditemukan IP LAN aktif. Pastikan laptop terhubung ke Wifi/Hotspot.</div>`;
-      }
-
-      content.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;">
-          <i class="fa-solid fa-circle-check" style="color: #059669; font-size: 1.5rem;"></i>
-          <div>
-            <div style="font-weight: 700; color: #065f46;">Aplikasi Terkoneksi ke Server Database!</div>
-            <div style="font-size: 0.8rem; color: #047857;">Setiap barang/transaksi yang Anda input di laptop akan langsung tersimpan & muncul di HP.</div>
-          </div>
-        </div>
-
-        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #1e293b;">Buka di HP via Jaringan Lokal (Wifi):</h4>
-        <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">
-          Hubungkan HP dan Laptop ke Wifi yang sama, lalu buka alamat berikut:
-        </p>
-        ${ipsHtml}
-
-        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
-
-        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #1e293b;">Koneksi Cloud Server (Render / Vercel):</h4>
-        <div class="form-group" style="margin-bottom: 8px;">
-          <label class="form-label" style="font-size: 0.8rem;">URL Backend Cloud Render.com</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="inputCloudBackendUrl" class="form-control" placeholder="https://ajibstore.onrender.com" value="${currentCloudUrl}">
-            <button type="button" class="btn btn-primary" id="btnSaveCloudUrl" style="flex-shrink: 0;">Hubungkan</button>
+            <div style="font-weight: 700; color: #065f46;">Firebase Realtime Cloud Database Aktif!</div>
+            <div style="font-size: 0.8rem; color: #047857;">Situs tersambung ke Firebase Cloud. Seluruh data barang & transaksi tersinkronisasi otomatis secara real-time di semua HP & Laptop!</div>
           </div>
         </div>
       `;
     } else {
-      content.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; background: #fffbeb; border: 1px solid #fef08a; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;">
-          <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; font-size: 1.5rem;"></i>
+      statusHeader = `
+        <div style="display: flex; align-items: center; gap: 12px; background: #fef2f2; border: 1px solid #fecaca; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px;">
+          <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626; font-size: 1.5rem;"></i>
           <div>
-            <div style="font-weight: 700; color: #92400e;">Mode Standalone (File) / Terputus</div>
-            <div style="font-size: 0.8rem; color: #b45309;">Aplikasi belum terhubung ke Server Database Online.</div>
+            <div style="font-weight: 700; color: #991b1b;">Firebase Cloud Belum Tersambung / Terkunci!</div>
+            <div style="font-size: 0.8rem; color: #b91c1c;">${firebaseErrorMsg || 'Rules Firebase Realtime Database perlu diatur ke .read: true, .write: true.'}</div>
           </div>
-        </div>
-
-        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #1e293b;">Hubungkan Vercel ke Cloud Database Render:</h4>
-        <p style="font-size: 0.85rem; color: #475569; margin-bottom: 10px;">
-          Masukkan URL Backend Render Anda agar <strong>ajibstore.vercel.app</strong> langsung tersimpan ke Cloud Database:
-        </p>
-
-        <div class="form-group" style="margin-bottom: 14px;">
-          <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">URL Cloud Server Render</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="inputCloudBackendUrl" class="form-control" placeholder="https://ajibstore.onrender.com" value="${currentCloudUrl}">
-            <button type="button" class="btn btn-primary" id="btnSaveCloudUrl" style="flex-shrink: 0;">Simpan</button>
-          </div>
-        </div>
-
-        <div style="font-size: 0.8rem; color: #64748b; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-          <strong>Belum punya URL Render?</strong><br>
-          Deploy repositori GitHub Anda di <a href="https://dashboard.render.com" target="_blank" style="color: #2563eb; font-weight: 600;">Render.com</a> (Gratis 100%).
         </div>
       `;
+    }
+
+    content.innerHTML = `
+      ${statusHeader}
+
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">URL Firebase Realtime Database Anda</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="inputFirebaseDbUrl" class="form-control" placeholder="https://xxx.asia-southeast1.firebasedatabase.app" value="${currentFirebaseUrl}">
+          <button type="button" class="btn btn-primary" id="btnSaveFirebaseDbUrl" style="flex-shrink: 0;">Simpan URL</button>
+        </div>
+        <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">
+          Di Firebase Console ➔ <strong>Realtime Database</strong> ➔ <strong>Rules</strong>, pastikan rules bernilai <code>".read": true, ".write": true</code>
+        </div>
+      </div>
+
+      <hr style="margin: 16px 0; border: none; border-top: 1px dashed #cbd5e1;">
+
+      <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: #1e293b;">Transfer Instant Data HP & Laptop (1-Klik):</h4>
+      <p style="font-size: 0.82rem; color: #475569; margin-bottom: 10px;">
+        Salin kode data dari HP/Laptop Anda dan tempel di perangkat lain untuk memindahkan stok & transaksi secara instan:
+      </p>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+        <button type="button" class="btn btn-secondary" id="btnExportSyncToken" style="flex: 1;">
+          <i class="fa-solid fa-copy"></i> Salin Data Perangkat Ini
+        </button>
+        <button type="button" class="btn btn-primary" id="btnForceUploadCloud" style="flex: 1; background: #0284c7;">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Upload Ke Cloud
+        </button>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 8px;">
+        <input type="text" id="inputImportSyncToken" class="form-control" placeholder="Tempel kode sync di sini...">
+      </div>
+      <button type="button" class="btn btn-primary" id="btnImportSyncToken" style="width: 100%;">
+        <i class="fa-solid fa-download"></i> Terapkan Data ke Perangkat Ini
+      </button>
+    `;
+
+    // Attach Save Firebase URL Button Handler
+    const btnSaveFirebase = document.getElementById('btnSaveFirebaseDbUrl');
+    if (btnSaveFirebase) {
+      btnSaveFirebase.addEventListener('click', () => {
+        const url = document.getElementById('inputFirebaseDbUrl').value.trim();
+        if (url) {
+          localStorage.setItem(FIREBASE_DB_URL_KEY, url);
+          alert('URL Firebase Database disimpan! Aplikasi akan mencoba tersambung...');
+          location.reload();
+        } else {
+          localStorage.removeItem(FIREBASE_DB_URL_KEY);
+          alert('URL Firebase direset ke default.');
+          location.reload();
+        }
+      });
+    }
+
+    // Attach Force Upload Cloud Button Handler
+    const btnForceUpload = document.getElementById('btnForceUploadCloud');
+    if (btnForceUpload) {
+      btnForceUpload.addEventListener('click', () => {
+        pushToFirebase();
+        alert('Data dari perangkat ini telah diunggah ke Firebase Cloud Database!');
+      });
     }
 
     // Attach Export Sync Token Handler

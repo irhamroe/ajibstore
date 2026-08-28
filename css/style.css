@@ -479,6 +479,14 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* 2 Column Grid Utility */
+.grid-2-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
 /* ==========================================================================
    Card Components (Modern Clean Light)
    ========================================================================== */
@@ -1519,10 +1527,29 @@ body {
   }
 
   /* Grid Layouts to 1 column */
+  .grid-2-col,
   #tab-bayar-wifi > div,
   #tab-dashboard > div:last-child {
     grid-template-columns: 1fr !important;
     width: 100% !important;
+  }
+
+  .pos-cart-panel {
+    height: auto !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .pos-search-wrap {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+
+  #btnScanBarcodeCamera {
+    width: 100% !important;
+    justify-content: center;
   }
 
   /* Modals: bottom-sheet on mobile */

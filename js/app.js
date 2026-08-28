@@ -67,6 +67,81 @@
   // ==========================================
   // 1B. API Client for SQLite Synchronization
   // ==========================================
+  // ==========================================
+  // 1B-2. Firebase Realtime Database Live Sync
+  // ==========================================
+  const FIREBASE_DB_URL_KEY = 'ajib_store_firebase_db_url_v2';
+  const DEFAULT_FIREBASE_DB_URL = 'https://ajibstore-pos-default-rtdb.asia-southeast1.firebasedatabase.app';
+  let firebaseDbRef = null;
+  let isFirebaseSyncActive = false;
+
+  function getFirebaseDbUrl() {
+    return localStorage.getItem(FIREBASE_DB_URL_KEY) || DEFAULT_FIREBASE_DB_URL;
+  }
+
+  function initFirebaseRealtimeSync() {
+    if (typeof firebase === 'undefined') return;
+
+    const dbUrl = getFirebaseDbUrl();
+    if (!dbUrl) return;
+
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp({
+          databaseURL: dbUrl
+        });
+      }
+      firebaseDbRef = firebase.database().ref('ajibstore');
+      isFirebaseSyncActive = true;
+
+      // Listen for real-time changes across devices
+      firebaseDbRef.on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          let changed = false;
+          if (val.products && JSON.stringify(state.products) !== JSON.stringify(val.products)) { state.products = val.products; changed = true; }
+          if (val.categories && JSON.stringify(state.categories) !== JSON.stringify(val.categories)) { state.categories = val.categories; changed = true; }
+          if (val.customers && JSON.stringify(state.customers) !== JSON.stringify(val.customers)) { state.customers = val.customers; changed = true; }
+          if (val.posTx && JSON.stringify(state.posTx) !== JSON.stringify(val.posTx)) { state.posTx = val.posTx; changed = true; }
+          if (val.wifiTx && JSON.stringify(state.wifiTx) !== JSON.stringify(val.wifiTx)) { state.wifiTx = val.wifiTx; changed = true; }
+          if (val.users && JSON.stringify(state.users) !== JSON.stringify(val.users)) { state.users = val.users; changed = true; }
+
+          if (changed) {
+            saveDataLocally(STORAGE_KEYS.PRODUCTS);
+            saveDataLocally(STORAGE_KEYS.CATEGORIES);
+            saveDataLocally(STORAGE_KEYS.CUSTOMERS);
+            saveDataLocally(STORAGE_KEYS.POS_TX);
+            saveDataLocally(STORAGE_KEYS.WIFI_TX);
+            saveDataLocally(STORAGE_KEYS.USERS_LIST);
+
+            renderCategoryDropdowns();
+            renderTabViews(state.activeTab);
+          }
+        }
+      });
+    } catch (e) {
+      console.warn('Firebase sync error:', e);
+      isFirebaseSyncActive = false;
+    }
+  }
+
+  function pushToFirebase() {
+    if (firebaseDbRef && isFirebaseSyncActive) {
+      try {
+        firebaseDbRef.set({
+          products: state.products,
+          categories: state.categories,
+          customers: state.customers,
+          posTx: state.posTx,
+          wifiTx: state.wifiTx,
+          users: state.users
+        });
+      } catch (e) {
+        console.error('Firebase push error:', e);
+      }
+    }
+  }
+
   const CUSTOM_BACKEND_URL_KEY = 'ajib_store_cloud_backend_url_v1';
 
   function getApiBaseUrl() {
@@ -400,6 +475,11 @@
   }
 
   function saveData(key) {
+    saveDataLocally(key);
+    pushToFirebase();
+  }
+
+  function saveDataLocally(key) {
     if (key === STORAGE_KEYS.PRODUCTS) localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(state.products));
     if (key === STORAGE_KEYS.CATEGORIES) localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(state.categories));
     if (key === STORAGE_KEYS.CUSTOMERS) localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(state.customers));
@@ -2268,6 +2348,9 @@
 
     // Default Render Dashboard
     renderDashboard();
+
+    // Initialize Firebase Realtime Cloud Sync for Vercel
+    initFirebaseRealtimeSync();
 
     // Connection status & info modal trigger
     const syncBadge = document.getElementById('connectionStatusBadge');

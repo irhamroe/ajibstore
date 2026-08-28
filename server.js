@@ -117,68 +117,86 @@ function initDatabaseSchema() {
       )
     `);
 
+    // 7. Table System Settings
+    db.run(`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+      )
+    `);
+
     seedDefaultDataIfEmpty();
   });
 }
 
 function seedDefaultDataIfEmpty() {
-  // Seed Users
-  db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
-    if (!err && row.count === 0) {
-      const stmt = db.prepare('INSERT INTO users (id, name, username, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?)');
-      stmt.run('u1', 'Administrator', 'admin', 'admin123', 'admin', '2026-01-01');
-      stmt.run('u2', 'Kasir Toko', 'kasir', 'kasir123', 'kasir', '2026-01-01');
-      stmt.finalize();
-      console.log('🌱 Seed data users berhasil ditambahkan');
+  db.get('SELECT value FROM system_settings WHERE key = ?', ['is_seeded'], (err, settingRow) => {
+    if (settingRow && settingRow.value === 'true') {
+      // System has already been seeded once. Do not re-seed demo items.
+      return;
     }
-  });
 
-  // Seed Categories
-  db.get('SELECT COUNT(*) as count FROM categories', (err, row) => {
-    if (!err && row.count === 0) {
-      const defaultCategories = ['Aksesori HP & Laptop', 'Jaringan & Wifi', 'Elektronik Rumah', 'Komponen & Kabel'];
-      const stmt = db.prepare('INSERT INTO categories (name) VALUES (?)');
-      defaultCategories.forEach(cat => stmt.run(cat));
-      stmt.finalize();
-      console.log('🌱 Seed data kategori berhasil ditambahkan');
-    }
-  });
+    // Seed Users
+    db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
+      if (!err && row.count === 0) {
+        const stmt = db.prepare('INSERT INTO users (id, name, username, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?)');
+        stmt.run('u1', 'Administrator', 'admin', 'admin123', 'admin', '2026-01-01');
+        stmt.run('u2', 'Kasir Toko', 'kasir', 'kasir123', 'kasir', '2026-01-01');
+        stmt.finalize();
+        console.log('🌱 Seed data users berhasil ditambahkan');
+      }
+    });
 
-  // Seed Products
-  db.get('SELECT COUNT(*) as count FROM products', (err, row) => {
-    if (!err && row.count === 0) {
-      const defaultProducts = [
-        { id: 'p1', barcode: '899100100201', name: 'Router Wifi TP-Link Archer C6 AC1200', category: 'Jaringan & Wifi', costPrice: 320000, sellPrice: 395000, stock: 12 },
-        { id: 'p2', barcode: '899100100202', name: 'Kabel UTP Cat6 Belden 10 Meter Ready', category: 'Komponen & Kabel', costPrice: 35000, sellPrice: 55000, stock: 25 },
-        { id: 'p3', barcode: '899100100203', name: 'Tang Krimping RJ45 & RJ11 Heavy Duty', category: 'Jaringan & Wifi', costPrice: 45000, sellPrice: 70000, stock: 8 },
-        { id: 'p4', barcode: '899100100204', name: 'Charger Fast Charging 65W GaN Type-C', category: 'Aksesori HP & Laptop', costPrice: 120000, sellPrice: 175000, stock: 18 },
-        { id: 'p5', barcode: '899100100205', name: 'STB Android TV Box 4K Wireless', category: 'Elektronik Rumah', costPrice: 280000, sellPrice: 360000, stock: 4 },
-        { id: 'p6', barcode: '899100100206', name: 'Headset Gaming Surround 7.1 RGB', category: 'Aksesori HP & Laptop', costPrice: 150000, sellPrice: 220000, stock: 9 },
-        { id: 'p7', barcode: '899100100207', name: 'Stopkontak Smart Wifi Smart Plug 16A', category: 'Elektronik Rumah', costPrice: 75000, sellPrice: 110000, stock: 15 }
-      ];
+    // Seed Categories
+    db.get('SELECT COUNT(*) as count FROM categories', (err, row) => {
+      if (!err && row.count === 0) {
+        const defaultCategories = ['Aksesori HP & Laptop', 'Jaringan & Wifi', 'Elektronik Rumah', 'Komponen & Kabel'];
+        const stmt = db.prepare('INSERT INTO categories (name) VALUES (?)');
+        defaultCategories.forEach(cat => stmt.run(cat));
+        stmt.finalize();
+        console.log('🌱 Seed data kategori berhasil ditambahkan');
+      }
+    });
 
-      const stmt = db.prepare('INSERT INTO products (id, barcode, name, category, cost_price, sell_price, stock, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-      defaultProducts.forEach(p => stmt.run(p.id, p.barcode, p.name, p.category, p.costPrice, p.sellPrice, p.stock, ''));
-      stmt.finalize();
-      console.log('🌱 Seed data produk berhasil ditambahkan');
-    }
-  });
+    // Seed Products
+    db.get('SELECT COUNT(*) as count FROM products', (err, row) => {
+      if (!err && row.count === 0) {
+        const defaultProducts = [
+          { id: 'p1', barcode: '899100100201', name: 'Router Wifi TP-Link Archer C6 AC1200', category: 'Jaringan & Wifi', costPrice: 320000, sellPrice: 395000, stock: 12 },
+          { id: 'p2', barcode: '899100100202', name: 'Kabel UTP Cat6 Belden 10 Meter Ready', category: 'Komponen & Kabel', costPrice: 35000, sellPrice: 55000, stock: 25 },
+          { id: 'p3', barcode: '899100100203', name: 'Tang Krimping RJ45 & RJ11 Heavy Duty', category: 'Jaringan & Wifi', costPrice: 45000, sellPrice: 70000, stock: 8 },
+          { id: 'p4', barcode: '899100100204', name: 'Charger Fast Charging 65W GaN Type-C', category: 'Aksesori HP & Laptop', costPrice: 120000, sellPrice: 175000, stock: 18 },
+          { id: 'p5', barcode: '899100100205', name: 'STB Android TV Box 4K Wireless', category: 'Elektronik Rumah', costPrice: 280000, sellPrice: 360000, stock: 4 },
+          { id: 'p6', barcode: '899100100206', name: 'Headset Gaming Surround 7.1 RGB', category: 'Aksesori HP & Laptop', costPrice: 150000, sellPrice: 220000, stock: 9 },
+          { id: 'p7', barcode: '899100100207', name: 'Stopkontak Smart Wifi Smart Plug 16A', category: 'Elektronik Rumah', costPrice: 75000, sellPrice: 110000, stock: 15 }
+        ];
 
-  // Seed Customers
-  db.get('SELECT COUNT(*) as count FROM customers', (err, row) => {
-    if (!err && row.count === 0) {
-      const defaultCustomers = [
-        { id: 'c1', name: 'Budi Santoso', address: 'Jl. Pemuda No. 45, RT 01/03', bandwidth: '20 Mbps', monthlyAmount: 150000, createdAt: '2026-01-10' },
-        { id: 'c2', name: 'Siti Rahmawati', address: 'Komp. Asri Indah Block C2', bandwidth: '30 Mbps', monthlyAmount: 200000, createdAt: '2026-02-01' },
-        { id: 'c3', name: 'Ahmad Hidayat', address: 'Dusun Melati RT 04/02 Desa Sukamaju', bandwidth: '10 Mbps', monthlyAmount: 100000, createdAt: '2026-03-15' },
-        { id: 'c4', name: 'Toko Kelontong Berkah', address: 'Jl. Pasar Anyar No. 88', bandwidth: '50 Mbps', monthlyAmount: 300000, createdAt: '2026-04-05' }
-      ];
+        const stmt = db.prepare('INSERT INTO products (id, barcode, name, category, cost_price, sell_price, stock, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        defaultProducts.forEach(p => stmt.run(p.id, p.barcode, p.name, p.category, p.costPrice, p.sellPrice, p.stock, ''));
+        stmt.finalize();
+        console.log('🌱 Seed data produk berhasil ditambahkan');
+      }
+    });
 
-      const stmt = db.prepare('INSERT INTO customers (id, name, address, bandwidth, monthly_amount, created_at) VALUES (?, ?, ?, ?, ?, ?)');
-      defaultCustomers.forEach(c => stmt.run(c.id, c.name, c.address, c.bandwidth, c.monthlyAmount, c.createdAt));
-      stmt.finalize();
-      console.log('🌱 Seed data pelanggan wifi berhasil ditambahkan');
-    }
+    // Seed Customers
+    db.get('SELECT COUNT(*) as count FROM customers', (err, row) => {
+      if (!err && row.count === 0) {
+        const defaultCustomers = [
+          { id: 'c1', name: 'Budi Santoso', address: 'Jl. Pemuda No. 45, RT 01/03', bandwidth: '20 Mbps', monthlyAmount: 150000, createdAt: '2026-01-10' },
+          { id: 'c2', name: 'Siti Rahmawati', address: 'Komp. Asri Indah Block C2', bandwidth: '30 Mbps', monthlyAmount: 200000, createdAt: '2026-02-01' },
+          { id: 'c3', name: 'Ahmad Hidayat', address: 'Dusun Melati RT 04/02 Desa Sukamaju', bandwidth: '10 Mbps', monthlyAmount: 100000, createdAt: '2026-03-15' },
+          { id: 'c4', name: 'Toko Kelontong Berkah', address: 'Jl. Pasar Anyar No. 88', bandwidth: '50 Mbps', monthlyAmount: 300000, createdAt: '2026-04-05' }
+        ];
+
+        const stmt = db.prepare('INSERT INTO customers (id, name, address, bandwidth, monthly_amount, created_at) VALUES (?, ?, ?, ?, ?, ?)');
+        defaultCustomers.forEach(c => stmt.run(c.id, c.name, c.address, c.bandwidth, c.monthlyAmount, c.createdAt));
+        stmt.finalize();
+        console.log('🌱 Seed data pelanggan wifi berhasil ditambahkan');
+      }
+    });
+
+    // Mark as seeded in database
+    db.run(`INSERT OR REPLACE INTO system_settings (key, value) VALUES ('is_seeded', 'true')`);
   });
 }
 
@@ -233,6 +251,13 @@ app.delete('/api/products/:id', (req, res) => {
   db.run('DELETE FROM products WHERE id = ?', [req.params.id], function (err) {
     if (err) return res.status(500).json({ success: false, error: err.message });
     res.json({ success: true, message: 'Barang berhasil dihapus' });
+  });
+});
+
+app.delete('/api/products', (req, res) => {
+  db.run('DELETE FROM products', [], function (err) {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+    res.json({ success: true, message: 'Semua barang berhasil dihapus' });
   });
 });
 

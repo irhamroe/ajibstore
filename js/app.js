@@ -206,6 +206,13 @@
       } catch (e) { console.error('API deleteProduct error:', e); }
     },
 
+    async clearAllProducts() {
+      if (!this.isServer && !getApiBaseUrl()) return;
+      try {
+        await fetch(`${getApiBaseUrl()}/api/products`, { method: 'DELETE' });
+      } catch (e) { console.error('API clearAllProducts error:', e); }
+    },
+
     async addCategory(name) {
       if (!this.isServer && !getApiBaseUrl()) return;
       try {
@@ -330,9 +337,25 @@
     }
   };
 
-  // Helper Functions
+  const HAS_SEEDED_KEY = 'ajib_store_has_seeded_v1';
+
   function loadData() {
-    state.products = JSON.parse(localStorage.getItem(STORAGE_KEYS.PRODUCTS)) || DEFAULT_PRODUCTS;
+    const savedProducts = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
+    const hasSeeded = localStorage.getItem(HAS_SEEDED_KEY);
+
+    if (savedProducts !== null) {
+      try {
+        state.products = JSON.parse(savedProducts);
+      } catch (e) {
+        state.products = DEFAULT_PRODUCTS;
+      }
+    } else if (!hasSeeded) {
+      state.products = DEFAULT_PRODUCTS;
+      localStorage.setItem(HAS_SEEDED_KEY, 'true');
+    } else {
+      state.products = [];
+    }
+
     state.categories = JSON.parse(localStorage.getItem(STORAGE_KEYS.CATEGORIES)) || DEFAULT_CATEGORIES;
     state.customers = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMERS)) || DEFAULT_CUSTOMERS;
     state.posTx = JSON.parse(localStorage.getItem(STORAGE_KEYS.POS_TX)) || [];
@@ -1559,6 +1582,25 @@
 
     document.getElementById('searchProductInput').addEventListener('input', renderProductTable);
     document.getElementById('filterProductCategory').addEventListener('change', renderProductTable);
+
+    const btnClearAll = document.getElementById('btnClearAllProducts');
+    if (btnClearAll) {
+      btnClearAll.addEventListener('click', () => {
+        if (state.products.length === 0) {
+          alert('Stok barang sudah kosong!');
+          return;
+        }
+        if (confirm('PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA BARANG dari stok? Tindakan ini akan mengosongkan seluruh stok barang di laptop & HP.')) {
+          state.products = [];
+          localStorage.setItem(HAS_SEEDED_KEY, 'true');
+          saveData(STORAGE_KEYS.PRODUCTS);
+          API.clearAllProducts();
+          renderProductTable();
+          renderPosProducts();
+          alert('Seluruh stok barang berhasil di-reset dan dihapus!');
+        }
+      });
+    }
 
     // Edit Product Click Handler
     window.setProductImageHelper = setProdImagePreview;

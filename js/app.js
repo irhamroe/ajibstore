@@ -747,7 +747,9 @@
   }
 
   async function syncWithServer(renderAfter = true) {
-    await pullFromVercelSync(renderAfter);
+    if (typeof pullFromVercelSync === 'function') {
+      await pullFromVercelSync(renderAfter);
+    }
     const data = await API.fetchAll();
     if (data) {
       let changed = false;
@@ -1278,33 +1280,43 @@
   }
 
   function deletePosTx(id) {
-    const tx = state.posTx.find(t => t.id === id);
+    const tx = state.posTx.find(t => String(t.id) === String(id));
     if (!tx) return;
-    if (confirm(`Apakah Anda yakin ingin menghapus transaksi toko (No. Nota: ${tx.receiptNo})?`)) {
-      state.posTx = state.posTx.filter(t => t.id !== id);
-      saveData(STORAGE_KEYS.POS_TX);
-      API.deletePosTransaction(id);
-      renderDashboard();
-      if (state.activeTab === 'rekap-pos') renderRekapPos();
-    }
+    showModernConfirm(
+      'Hapus Transaksi POS',
+      `Apakah Anda yakin ingin menghapus transaksi toko (No. Nota: ${tx.receiptNo})?`,
+      () => {
+        state.posTx = state.posTx.filter(t => String(t.id) !== String(id));
+        saveData(STORAGE_KEYS.POS_TX);
+        API.deletePosTransaction(id);
+        renderDashboard();
+        if (state.activeTab === 'rekap-pos') renderRekapPos();
+        showToast(`Transaksi POS ${tx.receiptNo} berhasil dihapus`, 'success');
+      }
+    );
   }
 
   function deleteWifiTx(id) {
-    const tx = state.wifiTx.find(t => t.id === id);
+    const tx = state.wifiTx.find(t => String(t.id) === String(id));
     if (!tx) return;
-    if (confirm(`Apakah Anda yakin ingin menghapus pembayaran Wifi pelanggan "${tx.customerName}" (Periode ${tx.periodMonth})?`)) {
-      state.wifiTx = state.wifiTx.filter(t => t.id !== id);
-      saveData(STORAGE_KEYS.WIFI_TX);
-      API.deleteWifiTransaction(id);
-      renderDashboard();
-      if (state.activeTab === 'rekap-wifi') renderRekapWifi();
-      if (state.activeTab === 'pelanggan-wifi') renderWifiCustomers();
-      if (state.activeTab === 'bayar-wifi') renderRecentWifiPayments();
-    }
+    showModernConfirm(
+      'Hapus Pembayaran Wifi',
+      `Apakah Anda yakin ingin menghapus pembayaran Wifi pelanggan "${tx.customerName}" (Periode ${tx.periodMonth})?`,
+      () => {
+        state.wifiTx = state.wifiTx.filter(t => String(t.id) !== String(id));
+        saveData(STORAGE_KEYS.WIFI_TX);
+        API.deleteWifiTransaction(id);
+        renderDashboard();
+        if (state.activeTab === 'rekap-wifi') renderRekapWifi();
+        if (state.activeTab === 'pelanggan-wifi') renderWifiCustomers();
+        if (state.activeTab === 'bayar-wifi') renderRecentWifiPayments();
+        showToast(`Pembayaran Wifi "${tx.customerName}" berhasil dihapus`, 'success');
+      }
+    );
   }
 
   function openEditPosTxModal(id) {
-    const tx = state.posTx.find(t => t.id === id);
+    const tx = state.posTx.find(t => String(t.id) === String(id));
     if (!tx) return;
 
     document.getElementById('editPosTxId').value = tx.id;
@@ -1340,7 +1352,7 @@
       const cash = parseFloat(cashInput.value);
       const change = Math.max(0, cash - total);
 
-      const idx = state.posTx.findIndex(t => t.id === id);
+      const idx = state.posTx.findIndex(t => String(t.id) === String(id));
       if (idx !== -1) {
         state.posTx[idx].total = total;
         state.posTx[idx].cash = cash;
@@ -1353,13 +1365,13 @@
         closeModal('modalEditPosTx');
         renderDashboard();
         if (state.activeTab === 'rekap-pos') renderRekapPos();
-        alert(`Transaksi POS (Nota: ${state.posTx[idx].receiptNo}) berhasil diperbarui!`);
+        showToast(`Transaksi POS ${state.posTx[idx].receiptNo} berhasil diperbarui!`, 'success');
       }
     });
   }
 
   function openEditWifiTxModal(id) {
-    const tx = state.wifiTx.find(t => t.id === id);
+    const tx = state.wifiTx.find(t => String(t.id) === String(id));
     if (!tx) return;
 
     const selectCust = document.getElementById('editWifiTxCustomerId');
@@ -1386,9 +1398,9 @@
       const amount = parseFloat(document.getElementById('editWifiTxAmount').value);
       const notes = document.getElementById('editWifiTxNotes').value || 'Lunas';
 
-      const customer = state.customers.find(c => c.id === customerId);
+      const customer = state.customers.find(c => String(c.id) === String(customerId));
 
-      const idx = state.wifiTx.findIndex(t => t.id === id);
+      const idx = state.wifiTx.findIndex(t => String(t.id) === String(id));
       if (idx !== -1) {
         state.wifiTx[idx].customerId = customer ? customer.id : customerId;
         state.wifiTx[idx].customerName = customer ? customer.name : state.wifiTx[idx].customerName;
@@ -1406,7 +1418,7 @@
         if (state.activeTab === 'rekap-wifi') renderRekapWifi();
         if (state.activeTab === 'pelanggan-wifi') renderWifiCustomers();
         if (state.activeTab === 'bayar-wifi') renderRecentWifiPayments();
-        alert(`Transaksi Wifi pelanggan "${state.wifiTx[idx].customerName}" berhasil diperbarui!`);
+        showToast(`Transaksi Wifi pelanggan "${state.wifiTx[idx].customerName}" berhasil diperbarui!`, 'success');
       }
     });
   }
@@ -1414,6 +1426,48 @@
   function renderDashboardRecentTx() {
     const tbody = document.getElementById('dashRecentTxTableBody');
     if (!tbody) return;
+
+    // Attach event delegation once if not already attached
+    if (!tbody.hasAttribute('data-delegated')) {
+      tbody.setAttribute('data-delegated', 'true');
+      tbody.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.btn-edit-dash-tx');
+        const printBtn = e.target.closest('.btn-print-dash-tx');
+        const delBtn = e.target.closest('.btn-del-dash-tx');
+
+        if (editBtn) {
+          const id = editBtn.getAttribute('data-id');
+          const type = editBtn.getAttribute('data-type');
+          if (type === 'pos') {
+            openEditPosTxModal(id);
+          } else {
+            openEditWifiTxModal(id);
+          }
+        }
+
+        if (printBtn) {
+          const id = printBtn.getAttribute('data-id');
+          const type = printBtn.getAttribute('data-type');
+          if (type === 'pos') {
+            const tx = state.posTx.find(t => String(t.id) === String(id));
+            if (tx) { renderPosReceipt(tx); openModal('modalPosReceipt'); }
+          } else {
+            const tx = state.wifiTx.find(t => String(t.id) === String(id));
+            if (tx) { renderWifiReceipt(tx); openModal('modalWifiReceipt'); }
+          }
+        }
+
+        if (delBtn) {
+          const id = delBtn.getAttribute('data-id');
+          const type = delBtn.getAttribute('data-type');
+          if (type === 'pos') {
+            deletePosTx(id);
+          } else {
+            deleteWifiTx(id);
+          }
+        }
+      });
+    }
 
     // Combine POS and Wifi transactions
     const combinedTx = [
@@ -1470,44 +1524,6 @@
         </td>
       </tr>
     `).join('');
-
-    tbody.querySelectorAll('.btn-edit-dash-tx').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.getAttribute('data-id');
-        const type = b.getAttribute('data-type');
-        if (type === 'pos') {
-          openEditPosTxModal(id);
-        } else {
-          openEditWifiTxModal(id);
-        }
-      });
-    });
-
-    tbody.querySelectorAll('.btn-print-dash-tx').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.getAttribute('data-id');
-        const type = b.getAttribute('data-type');
-        if (type === 'pos') {
-          const tx = state.posTx.find(t => t.id === id);
-          if (tx) { renderPosReceipt(tx); openModal('modalPosReceipt'); }
-        } else {
-          const tx = state.wifiTx.find(t => t.id === id);
-          if (tx) { renderWifiReceipt(tx); openModal('modalWifiReceipt'); }
-        }
-      });
-    });
-
-    tbody.querySelectorAll('.btn-del-dash-tx').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.getAttribute('data-id');
-        const type = b.getAttribute('data-type');
-        if (type === 'pos') {
-          deletePosTx(id);
-        } else {
-          deleteWifiTx(id);
-        }
-      });
-    });
   }
 
   // ==========================================
@@ -1811,17 +1827,77 @@
     document.getElementById('searchProductInput').addEventListener('input', renderProductTable);
     document.getElementById('filterProductCategory').addEventListener('change', renderProductTable);
 
-    // Edit Product Click Handler
+    // Event Delegation for Edit & Delete buttons on productTableBody
+    const tbody = document.getElementById('productTableBody');
+    if (tbody) {
+      tbody.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.btn-edit-prod');
+        const delBtn = e.target.closest('.btn-del-prod');
+
+        if (editBtn) {
+          const id = editBtn.getAttribute('data-id');
+          const prod = state.products.find(p => String(p.id) === String(id));
+          if (prod) {
+            renderCategoryDropdowns();
+            const prodCategoryEl = document.getElementById('prodCategory');
+            if (prodCategoryEl && prod.category && !state.categories.includes(prod.category)) {
+              const opt = document.createElement('option');
+              opt.value = prod.category;
+              opt.textContent = prod.category;
+              prodCategoryEl.appendChild(opt);
+            }
+            document.getElementById('prodId').value = prod.id || '';
+            document.getElementById('prodBarcode').value = prod.barcode || '';
+            document.getElementById('prodName').value = prod.name || '';
+            if (prodCategoryEl) prodCategoryEl.value = prod.category || '';
+            document.getElementById('prodCostPrice').value = prod.costPrice || 0;
+            document.getElementById('prodSellPrice').value = prod.sellPrice || 0;
+            document.getElementById('prodStock').value = prod.stock || 0;
+            document.getElementById('modalProductTitle').textContent = 'Edit Barang';
+            if (window.setProductImageHelper) {
+              window.setProductImageHelper(prod.image || '');
+            }
+            openModal('modalProduct');
+          }
+        }
+
+        if (delBtn) {
+          const id = delBtn.getAttribute('data-id');
+          const prod = state.products.find(p => String(p.id) === String(id));
+          const prodName = prod ? prod.name : 'barang ini';
+
+          showModernConfirm(
+            'Hapus Barang',
+            `Yakin ingin menghapus "${prodName}" dari stok barang?`,
+            async () => {
+              state.products = state.products.filter(p => String(p.id) !== String(id));
+              saveData(STORAGE_KEYS.PRODUCTS);
+              renderProductTable();
+              renderPosProducts();
+              showToast(`Barang "${prodName}" berhasil dihapus`, 'success');
+              try { await API.deleteProduct(id); } catch (err) {}
+            }
+          );
+        }
+      });
+    }
+
+    // Edit Product Click Handler Helper
     window.setProductImageHelper = setProdImagePreview;
   }
 
   function renderProductTable() {
-    const search = (document.getElementById('searchProductInput').value || '').toLowerCase();
-    const catFilter = document.getElementById('filterProductCategory').value;
+    const searchInput = document.getElementById('searchProductInput');
+    const catFilterInput = document.getElementById('filterProductCategory');
+    const search = searchInput ? (searchInput.value || '').toLowerCase() : '';
+    const catFilter = catFilterInput ? catFilterInput.value : '';
     const tbody = document.getElementById('productTableBody');
+    if (!tbody) return;
 
     const filtered = state.products.filter(p => {
-      const matchSearch = p.name.toLowerCase().includes(search) || p.barcode.toLowerCase().includes(search);
+      const pName = (p.name || '').toLowerCase();
+      const pBarcode = (p.barcode || '').toLowerCase();
+      const matchSearch = pName.includes(search) || pBarcode.includes(search);
       const matchCat = !catFilter || p.category === catFilter;
       return matchSearch && matchCat;
     });
@@ -1833,59 +1909,23 @@
 
     tbody.innerHTML = filtered.map(p => `
       <tr>
-        <td style="font-family: monospace; color: var(--accent-pos); font-weight: 600;">${p.barcode}</td>
-        <td style="font-weight: 600;">${p.name}</td>
-        <td><span class="badge badge-info">${p.category}</span></td>
-        <td>${formatRupiah(p.costPrice)}</td>
-        <td style="font-weight: 700; color: var(--accent-wifi);">${formatRupiah(p.sellPrice)}</td>
-        <td style="font-weight: 700;">${p.stock}</td>
+        <td style="font-family: monospace; color: var(--accent-pos); font-weight: 600;">${p.barcode || '-'}</td>
+        <td style="font-weight: 600;">${p.name || '-'}</td>
+        <td><span class="badge badge-info">${p.category || '-'}</span></td>
+        <td>${formatRupiah(p.costPrice || 0)}</td>
+        <td style="font-weight: 700; color: var(--accent-wifi);">${formatRupiah(p.sellPrice || 0)}</td>
+        <td style="font-weight: 700;">${p.stock !== undefined ? p.stock : 0}</td>
         <td>
-          ${p.stock <= 5 
+          ${(p.stock || 0) <= 5 
             ? `<span class="badge badge-danger">Menipis</span>` 
             : `<span class="badge badge-success">Tersedia</span>`}
         </td>
         <td style="text-align: right;">
-          <button class="btn btn-sm btn-secondary btn-edit-prod" data-id="${p.id}" title="Edit Barang"><i class="fa-solid fa-pen"></i></button>
-          <button class="btn btn-sm btn-danger btn-del-prod" data-id="${p.id}" title="Hapus Barang"><i class="fa-solid fa-trash"></i></button>
+          <button class="btn btn-sm btn-secondary btn-edit-prod" data-id="${p.id}" title="Edit Barang"><i class="fa-solid fa-pen"></i> Edit</button>
+          <button class="btn btn-sm btn-danger btn-del-prod" data-id="${p.id}" title="Hapus Barang"><i class="fa-solid fa-trash"></i> Hapus</button>
         </td>
       </tr>
     `).join('');
-
-    // Attach Event Handlers for Edit/Delete
-    tbody.querySelectorAll('.btn-edit-prod').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        const prod = state.products.find(p => p.id === id);
-        if (prod) {
-          renderCategoryDropdowns();
-          document.getElementById('prodId').value = prod.id;
-          document.getElementById('prodBarcode').value = prod.barcode;
-          document.getElementById('prodName').value = prod.name;
-          document.getElementById('prodCategory').value = prod.category;
-          document.getElementById('prodCostPrice').value = prod.costPrice;
-          document.getElementById('prodSellPrice').value = prod.sellPrice;
-          document.getElementById('prodStock').value = prod.stock;
-          document.getElementById('modalProductTitle').textContent = 'Edit Barang';
-          if (window.setProductImageHelper) {
-            window.setProductImageHelper(prod.image || '');
-          }
-          openModal('modalProduct');
-        }
-      });
-    });
-
-    tbody.querySelectorAll('.btn-del-prod').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const id = btn.getAttribute('data-id');
-        if (confirm('Yakin ingin menghapus barang ini dari stok?')) {
-          state.products = state.products.filter(p => p.id !== id);
-          saveData(STORAGE_KEYS.PRODUCTS);
-          renderProductTable();
-          renderPosProducts();
-          try { await API.deleteProduct(id); } catch (e) {}
-        }
-      });
-    });
   }
 
   // ==========================================
@@ -2329,6 +2369,35 @@
     document.getElementById('rekapPosTotalProfit').textContent = formatRupiah(totalProfit);
     document.getElementById('rekapPosTotalTx').textContent = filtered.length + ' Transaksi';
 
+    // Attach event delegation once if not already attached
+    if (!tbody.hasAttribute('data-delegated')) {
+      tbody.setAttribute('data-delegated', 'true');
+      tbody.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.btn-edit-pos-tx');
+        const printBtn = e.target.closest('.btn-view-pos-receipt');
+        const delBtn = e.target.closest('.btn-del-pos-tx');
+
+        if (editBtn) {
+          const id = editBtn.getAttribute('data-id');
+          openEditPosTxModal(id);
+        }
+
+        if (printBtn) {
+          const id = printBtn.getAttribute('data-id');
+          const tx = state.posTx.find(t => String(t.id) === String(id));
+          if (tx) {
+            renderPosReceipt(tx);
+            openModal('modalPosReceipt');
+          }
+        }
+
+        if (delBtn) {
+          const id = delBtn.getAttribute('data-id');
+          deletePosTx(id);
+        }
+      });
+    }
+
     if (filtered.length === 0) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">Tidak ada transaksi POS pada rentang tanggal ini.</td></tr>`;
       return;
@@ -2359,31 +2428,6 @@
         </tr>
       `;
     }).join('');
-
-    tbody.querySelectorAll('.btn-edit-pos-tx').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.getAttribute('data-id');
-        openEditPosTxModal(id);
-      });
-    });
-
-    tbody.querySelectorAll('.btn-view-pos-receipt').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.getAttribute('data-id');
-        const tx = state.posTx.find(t => t.id === id);
-        if (tx) {
-          renderPosReceipt(tx);
-          openModal('modalPosReceipt');
-        }
-      });
-    });
-
-    tbody.querySelectorAll('.btn-del-pos-tx').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.getAttribute('data-id');
-        deletePosTx(id);
-      });
-    });
   }
 
   // ==========================================

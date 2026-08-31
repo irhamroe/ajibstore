@@ -1320,6 +1320,24 @@ body {
 }
 
 @media print {
+  @page {
+    size: auto;
+    margin: 0mm;
+  }
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .modal-overlay, .modal-content, .sidebar, .top-header, .main-content {
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
   body * {
     visibility: hidden;
   }
@@ -1332,8 +1350,10 @@ body {
     top: 0;
     width: 100%;
     max-width: 80mm;
-    box-shadow: none;
-    padding: 0;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
   }
 }
 

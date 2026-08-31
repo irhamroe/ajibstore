@@ -2302,13 +2302,23 @@
   window.appExecuteCheckout = executeCheckout;
   window.updateCheckoutChange = updateCheckoutChange;
 
+  function triggerPrint() {
+    setTimeout(() => {
+      try {
+        window.print();
+      } catch (err) {
+        console.error('Print error:', err);
+      }
+    }, 150);
+  }
+  window.triggerPrint = triggerPrint;
+
   function renderPosReceipt(tx) {
     const area = document.getElementById('posReceiptArea');
     area.innerHTML = `
       <div class="receipt-header">
         <h2>AJIB STORE</h2>
-        <div>Toko Elektronik & Wifi</div>
-        <div>Jl. Utama Ajib Store No. 1</div>
+        <div>Jl. Al Hidayah No. 27 Dsn. Pagotan Desa Keplaksari Kec. Peterongan Jombang</div>
         <div>Telp/WA: 0812-3456-7890</div>
       </div>
       <div class="receipt-row">
@@ -2348,7 +2358,6 @@
       </div>
       <div class="receipt-footer">
         <p>Terima kasih telah berbelanja di Ajib Store!</p>
-        <p>Barang elektronik bergaransi resmi.</p>
       </div>
     `;
   }

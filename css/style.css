@@ -1325,35 +1325,65 @@ body {
     margin: 0mm;
   }
   html, body {
-    background: #ffffff !important;
-    color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    height: auto !important;
     overflow: visible !important;
   }
-  .modal-overlay, .modal-content, .sidebar, .top-header, .main-content {
-    background: none !important;
+
+  .sidebar,
+  .top-header,
+  .main-wrapper,
+  .modal-overlay:not(.active) {
+    display: none !important;
+  }
+
+  .modal-overlay.active {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     box-shadow: none !important;
     border: none !important;
   }
-  body * {
-    visibility: hidden;
-  }
-  .receipt-paper, .receipt-paper * {
-    visibility: visible;
-  }
-  .receipt-paper {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    max-width: 80mm;
-    box-shadow: none !important;
+
+  .modal-overlay.active .modal-content {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 80mm !important;
+    margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .modal-overlay.active .modal-header,
+  .modal-overlay.active .modal-footer,
+  .modal-overlay.active .closeModalBtn {
+    display: none !important;
+  }
+
+  .modal-overlay.active .receipt-paper {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 80mm !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    background: #ffffff !important;
     color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 }
 

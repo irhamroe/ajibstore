@@ -2433,6 +2433,94 @@
   }
   window.triggerPrint = triggerPrint;
 
+  function openReceiptWindow(areaId) {
+    if (!areaId) areaId = 'posReceiptArea';
+    const receiptEl = document.getElementById(areaId);
+    if (!receiptEl) {
+      alert('Struk tidak ditemukan.');
+      return;
+    }
+
+    const win = window.open('', '_blank');
+    if (!win) {
+      alert('Pop-up terblokir oleh browser. Harap izinkan pop-up (Pop-up Allowed) untuk aplikasi ini.');
+      return;
+    }
+
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Struk Pembayaran - Ajib Store</title>
+        <style>
+          @page { size: 80mm auto; margin: 0mm; }
+          * { box-sizing: border-box; }
+          body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            color: #000;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .receipt-paper {
+            background: #fff;
+            padding: 16px;
+            width: 100%;
+            max-width: 340px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 6px;
+          }
+          .receipt-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px; }
+          .receipt-header h2 { font-family: sans-serif; font-size: 16px; margin: 0 0 4px 0; font-weight: bold; }
+          .receipt-divider { border-top: 1px dashed #000; margin: 6px 0; }
+          .receipt-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+          .receipt-table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 11px; }
+          .receipt-table td { padding: 2px 0; }
+          .receipt-totals { border-top: 1px dashed #000; padding-top: 6px; margin-top: 6px; }
+          .receipt-footer { text-align: center; margin-top: 12px; border-top: 1px dashed #000; padding-top: 8px; font-size: 11px; }
+          .no-print {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 10px;
+          }
+          .btn-print {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(37,99,235,0.4);
+          }
+          @media print {
+            body { background: #fff; padding: 0; }
+            .receipt-paper { border: none; box-shadow: none; max-width: 80mm; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="no-print">
+          <button class="btn-print" onclick="window.print()">🖨️ Cetak Struk (Ctrl + P)</button>
+        </div>
+        <div class="receipt-paper">
+          ${receiptEl.innerHTML}
+        </div>
+      </body>
+      </html>
+    `);
+    win.document.close();
+  }
+  window.openReceiptWindow = openReceiptWindow;
+
   function renderPosReceipt(tx) {
     const area = document.getElementById('posReceiptArea');
     area.innerHTML = `

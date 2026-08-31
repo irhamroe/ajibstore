@@ -24,7 +24,8 @@
   <!-- Application Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%230f172a'/><path d='M55 12 L22 56 H48 L41 88 L78 44 H52 Z' fill='%23f59e0b'/></svg>">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%230f172a'/><path d='M55 12 L22 56 H48 L41 88 L78 44 H52 Z' fill='%23f59e0b'/></svg>">
   <link rel="icon" type="image/x-icon" href="./favicon.ico">
   <link rel="icon" type="image/jpeg" href="./favicon.jpg">
   <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
@@ -362,7 +363,7 @@
           </div>
 
           <div class="glass-card">
-            <h3 style="margin-bottom: 18px;"><i class="fa-solid fa-list-check"></i> Riwayat Transaksi Toko Elektronik
+            <h3 style="margin-bottom: 18px;"><i class="fa-solid fa-list-check"></i> Riwayat Transaksi Toko
             </h3>
             <div class="table-responsive">
               <table class="custom-table">
@@ -778,7 +779,8 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalCheckout">Batal</button>
-        <button type="button" class="btn btn-primary" id="btnConfirmCheckout" style="padding: 12px 28px; font-weight: 700; font-size: 1rem; border-radius: 10px; background: #2563eb;">
+        <button type="button" class="btn btn-primary" id="btnConfirmCheckout"
+          style="padding: 12px 28px; font-weight: 700; font-size: 1rem; border-radius: 10px; background: #2563eb;">
           <i class="fa-solid fa-credit-card"></i> Bayar
         </button>
       </div>
@@ -788,26 +790,37 @@
   <!-- Modal Alert Modern (SweetAlert Style) -->
   <div class="modal-overlay" id="modalModernAlert">
     <div class="modal-content" style="max-width: 400px; text-align: center; padding: 24px; border-radius: 16px;">
-      <div id="modernAlertIconBox" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; background: #eff6ff;">
+      <div id="modernAlertIconBox"
+        style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; background: #eff6ff;">
         <i id="modernAlertIcon" class="fa-solid fa-circle-info" style="font-size: 2.4rem; color: #3b82f6;"></i>
       </div>
-      <h3 id="modernAlertTitle" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Informasi</h3>
-      <p id="modernAlertMessage" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;"></p>
-      <button type="button" class="btn btn-primary closeModalBtn" data-modal="modalModernAlert" id="btnModernAlertOk" style="width: 100%; padding: 12px; font-weight: 700; border-radius: 10px;">OK</button>
+      <h3 id="modernAlertTitle"
+        style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Informasi</h3>
+      <p id="modernAlertMessage"
+        style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;"></p>
+      <button type="button" class="btn btn-primary closeModalBtn" data-modal="modalModernAlert" id="btnModernAlertOk"
+        style="width: 100%; padding: 12px; font-weight: 700; border-radius: 10px;">OK</button>
     </div>
   </div>
 
   <!-- Modal Confirm Modern -->
   <div class="modal-overlay" id="modalModernConfirm">
     <div class="modal-content" style="max-width: 420px; text-align: center; padding: 24px; border-radius: 16px;">
-      <div style="width: 60px; height: 60px; background: #fffbeb; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;">
+      <div
+        style="width: 60px; height: 60px; background: #fffbeb; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;">
         <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.4rem; color: #f59e0b;"></i>
       </div>
-      <h3 id="modernConfirmTitle" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Konfirmasi</h3>
-      <p id="modernConfirmMessage" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+      <h3 id="modernConfirmTitle"
+        style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Konfirmasi</h3>
+      <p id="modernConfirmMessage"
+        style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">Apakah Anda yakin
+        ingin melanjutkan tindakan ini?</p>
       <div style="display: flex; gap: 10px;">
-        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalModernConfirm" style="flex: 1; padding: 12px;">Batal</button>
-        <button type="button" class="btn btn-danger" id="btnModernConfirmYes" style="flex: 1; padding: 12px; background: #ef4444; border-color: #ef4444; color: #fff; font-weight: 700;">Ya, Lanjutkan</button>
+        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalModernConfirm"
+          style="flex: 1; padding: 12px;">Batal</button>
+        <button type="button" class="btn btn-danger" id="btnModernConfirmYes"
+          style="flex: 1; padding: 12px; background: #ef4444; border-color: #ef4444; color: #fff; font-weight: 700;">Ya,
+          Lanjutkan</button>
       </div>
     </div>
   </div>
@@ -815,21 +828,27 @@
   <!-- Modal 4: Struk Printable POS Receipt -->
   <div class="modal-overlay" id="modalPosReceipt">
     <div class="modal-content" style="max-width: 420px; background: #fff; color: #000; border-radius: 16px;">
-      <div class="modal-header" style="border-bottom: 1px solid #eee; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+      <div class="modal-header"
+        style="border-bottom: 1px solid #eee; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 1.3rem;"></i>
           <h3 style="color: #0f172a; margin: 0; font-size: 1.1rem; font-weight: 700;">Pembayaran Berhasil</h3>
         </div>
-        <button class="modal-close-btn closeModalBtn" data-modal="modalPosReceipt" style="color: #64748b;">&times;</button>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalPosReceipt"
+          style="color: #64748b;">&times;</button>
       </div>
       <div class="modal-body" style="padding: 16px;">
         <div class="receipt-paper" id="posReceiptArea">
           <!-- Thermal receipt populated dynamically -->
         </div>
       </div>
-      <div class="modal-footer" style="border-top: 1px solid #eee; background: #f8fafc; padding: 12px 16px; display: flex; gap: 10px; justify-content: flex-end;">
-        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalPosReceipt" style="flex: 1; padding: 10px; font-weight: 600;">Tutup</button>
-        <button type="button" class="btn btn-primary" onclick="window.print()" style="flex: 1; padding: 10px; font-weight: 700; background: #2563eb;"><i class="fa-solid fa-print"></i> Cetak Struk</button>
+      <div class="modal-footer"
+        style="border-top: 1px solid #eee; background: #f8fafc; padding: 12px 16px; display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalPosReceipt"
+          style="flex: 1; padding: 10px; font-weight: 600;">Tutup</button>
+        <button type="button" class="btn btn-primary" onclick="window.print()"
+          style="flex: 1; padding: 10px; font-weight: 700; background: #2563eb;"><i class="fa-solid fa-print"></i> Cetak
+          Struk</button>
       </div>
     </div>
   </div>
@@ -958,110 +977,110 @@
   </div>
 
   <!-- Modal 9: Edit Transaksi POS -->
-    <div class="modal-overlay" id="modalEditPosTx">
-      <div class="modal-content" style="max-width: 480px;">
-        <div class="modal-header">
-          <h3><i class="fa-solid fa-pen-to-square"></i> Edit Transaksi Toko POS</h3>
-          <button class="modal-close-btn closeModalBtn" data-modal="modalEditPosTx">&times;</button>
-        </div>
-        <form id="formEditPosTx">
-          <div class="modal-body" style="padding: 20px;">
-            <input type="hidden" id="editPosTxId">
-            <div class="form-group">
-              <label class="form-label">No. Nota Transaksi</label>
-              <input type="text" id="editPosTxReceiptNo" class="form-control" readonly
-                style="background: var(--bg-muted);">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Total Pembayaran (Rp)</label>
-              <input type="number" id="editPosTxTotal" class="form-control" required min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Uang Tunai Diterima (Rp)</label>
-              <input type="number" id="editPosTxCash" class="form-control" required min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Uang Kembalian (Rp)</label>
-              <input type="number" id="editPosTxChange" class="form-control" readonly
-                style="background: var(--bg-muted);">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalEditPosTx">Batal</button>
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Simpan
-              Perubahan</button>
-          </div>
-        </form>
+  <div class="modal-overlay" id="modalEditPosTx">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-pen-to-square"></i> Edit Transaksi</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalEditPosTx">&times;</button>
       </div>
-    </div>
-
-    <!-- Modal 10: Edit Transaksi Wifi -->
-    <div class="modal-overlay" id="modalEditWifiTx">
-      <div class="modal-content" style="max-width: 480px;">
-        <div class="modal-header">
-          <h3><i class="fa-solid fa-pen-to-square"></i> Edit Transaksi Wifi Ajib.Net</h3>
-          <button class="modal-close-btn closeModalBtn" data-modal="modalEditWifiTx">&times;</button>
+      <form id="formEditPosTx">
+        <div class="modal-body" style="padding: 20px;">
+          <input type="hidden" id="editPosTxId">
+          <div class="form-group">
+            <label class="form-label">No. Nota Transaksi</label>
+            <input type="text" id="editPosTxReceiptNo" class="form-control" readonly
+              style="background: var(--bg-muted);">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Total Pembayaran (Rp)</label>
+            <input type="number" id="editPosTxTotal" class="form-control" required min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Uang Tunai Diterima (Rp)</label>
+            <input type="number" id="editPosTxCash" class="form-control" required min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Uang Kembalian (Rp)</label>
+            <input type="number" id="editPosTxChange" class="form-control" readonly
+              style="background: var(--bg-muted);">
+          </div>
         </div>
-        <form id="formEditWifiTx">
-          <div class="modal-body" style="padding: 20px;">
-            <input type="hidden" id="editWifiTxId">
-            <div class="form-group">
-              <label class="form-label">Pilih Pelanggan Ajib.Net</label>
-              <select id="editWifiTxCustomerId" class="form-control form-control-wifi" required>
-                <!-- Options populated dynamically -->
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Periode Bulan Pembayaran</label>
-              <input type="month" id="editWifiTxMonth" class="form-control form-control-wifi" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Nominal Pembayaran (Rp)</label>
-              <input type="number" id="editWifiTxAmount" class="form-control form-control-wifi" required min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Catatan / Keterangan</label>
-              <input type="text" id="editWifiTxNotes" class="form-control form-control-wifi"
-                placeholder="Contoh: Lunas via Kasir Ajib Store">
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalEditWifiTx">Batal</button>
-            <button type="submit" class="btn btn-wifi"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- MODAL LOGIN SCREEN -->
-    <div class="login-screen-wrapper" id="loginScreen">
-      <div class="login-card">
-        <div class="login-brand-logo">
-          <i class="fa-solid fa-bolt"></i>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalEditPosTx">Batal</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Simpan
+            Perubahan</button>
         </div>
-        <h2 style="color: var(--text-main); font-weight: 800; margin-bottom: 24px;">Ajib Store</h2>
-
-        <form id="formLogin">
-          <div class="form-group" style="text-align: left;">
-            <label class="form-label">Username</label>
-            <input type="text" id="loginUsername" class="form-control" placeholder="Masukkan username" required>
-          </div>
-
-          <div class="form-group" style="text-align: left;">
-            <label class="form-label">Password</label>
-            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
-          </div>
-
-          <button type="submit" class="btn btn-primary"
-            style="width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem;">
-            <i class="fa-solid fa-right-to-bracket"></i> Masuk
-          </button>
-        </form>
-      </div>
+      </form>
     </div>
+  </div>
 
-    <!-- Application Logic -->
-    <script src="js/app.js"></script>
+  <!-- Modal 10: Edit Transaksi Wifi -->
+  <div class="modal-overlay" id="modalEditWifiTx">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-pen-to-square"></i> Edit Transaksi Wifi Ajib.Net</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalEditWifiTx">&times;</button>
+      </div>
+      <form id="formEditWifiTx">
+        <div class="modal-body" style="padding: 20px;">
+          <input type="hidden" id="editWifiTxId">
+          <div class="form-group">
+            <label class="form-label">Pilih Pelanggan Ajib.Net</label>
+            <select id="editWifiTxCustomerId" class="form-control form-control-wifi" required>
+              <!-- Options populated dynamically -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Periode Bulan Pembayaran</label>
+            <input type="month" id="editWifiTxMonth" class="form-control form-control-wifi" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nominal Pembayaran (Rp)</label>
+            <input type="number" id="editWifiTxAmount" class="form-control form-control-wifi" required min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Catatan / Keterangan</label>
+            <input type="text" id="editWifiTxNotes" class="form-control form-control-wifi"
+              placeholder="Contoh: Lunas via Kasir Ajib Store">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalEditWifiTx">Batal</button>
+          <button type="submit" class="btn btn-wifi"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL LOGIN SCREEN -->
+  <div class="login-screen-wrapper" id="loginScreen">
+    <div class="login-card">
+      <div class="login-brand-logo">
+        <i class="fa-solid fa-bolt"></i>
+      </div>
+      <h2 style="color: var(--text-main); font-weight: 800; margin-bottom: 24px;">Ajib Store</h2>
+
+      <form id="formLogin">
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label">Username</label>
+          <input type="text" id="loginUsername" class="form-control" placeholder="Masukkan username" required>
+        </div>
+
+        <div class="form-group" style="text-align: left;">
+          <label class="form-label">Password</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary"
+          style="width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem;">
+          <i class="fa-solid fa-right-to-bracket"></i> Masuk
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="js/app.js"></script>
 </body>
 
 </html>

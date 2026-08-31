@@ -31,7 +31,7 @@
     { id: 'u2', name: 'Kasir Toko', username: 'kasir', password: 'kasir123', role: 'kasir', createdAt: '2026-01-01' }
   ];
 
-  const KASIR_ALLOWED_TABS = ['kasir-pos', 'rekap-pos', 'bayar-wifi', 'rekap-wifi'];
+  const KASIR_ALLOWED_TABS = ['dashboard', 'kasir-pos', 'rekap-pos', 'bayar-wifi', 'rekap-wifi'];
 
   const DEFAULT_PRODUCTS = [];
 
@@ -839,11 +839,16 @@
 
     // Handle Logout
     btnLogout.addEventListener('click', () => {
-      if (confirm('Apakah Anda yakin ingin keluar/logout?')) {
-        state.currentUser = null;
-        localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
-        loginScreen.classList.remove('hidden');
-      }
+      showModernConfirm(
+        'Keluar Aplikasi',
+        'Apakah Anda yakin ingin keluar/logout dari aplikasi Ajib Store?',
+        () => {
+          state.currentUser = null;
+          localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+          loginScreen.classList.remove('hidden');
+          showToast('Anda telah berhasil keluar/logout.', 'info');
+        }
+      );
     });
 
     // Check existing session
@@ -1279,7 +1284,16 @@
     renderDashboardRecentTx();
   }
 
+  function checkKasirGuard() {
+    if (state.currentUser && state.currentUser.role === 'kasir') {
+      showToast('Akses Ditolak! Kasir tidak memiliki hak akses untuk edit/hapus data.', 'error');
+      return true;
+    }
+    return false;
+  }
+
   function deletePosTx(id) {
+    if (checkKasirGuard()) return;
     const tx = state.posTx.find(t => String(t.id) === String(id));
     if (!tx) return;
     showModernConfirm(
@@ -1297,6 +1311,7 @@
   }
 
   function deleteWifiTx(id) {
+    if (checkKasirGuard()) return;
     const tx = state.wifiTx.find(t => String(t.id) === String(id));
     if (!tx) return;
     showModernConfirm(
@@ -1316,6 +1331,7 @@
   }
 
   function openEditPosTxModal(id) {
+    if (checkKasirGuard()) return;
     const tx = state.posTx.find(t => String(t.id) === String(id));
     if (!tx) return;
 
@@ -1371,6 +1387,7 @@
   }
 
   function openEditWifiTxModal(id) {
+    if (checkKasirGuard()) return;
     const tx = state.wifiTx.find(t => String(t.id) === String(id));
     if (!tx) return;
 
@@ -1497,6 +1514,8 @@
       return;
     }
 
+    const isKasir = state.currentUser && state.currentUser.role === 'kasir';
+
     tbody.innerHTML = recents.map(t => `
       <tr>
         <td style="font-family: monospace; color: var(--accent-pos); font-weight: 600;">${t.receiptNo}</td>
@@ -1511,15 +1530,17 @@
         </td>
         <td style="text-align: right;">
           <div style="display: inline-flex; gap: 4px;">
+            ${isKasir ? '' : `
             <button class="btn btn-sm btn-primary btn-edit-dash-tx" data-id="${t.id}" data-type="${t.type}" title="Edit Transaksi">
               <i class="fa-solid fa-pen"></i>
-            </button>
+            </button>`}
             <button class="btn btn-sm btn-secondary btn-print-dash-tx" data-id="${t.id}" data-type="${t.type}" title="Cetak Struk">
               <i class="fa-solid fa-print"></i>
             </button>
+            ${isKasir ? '' : `
             <button class="btn btn-sm btn-danger btn-del-dash-tx" data-id="${t.id}" data-type="${t.type}" title="Hapus Transaksi">
               <i class="fa-solid fa-trash"></i>
-            </button>
+            </button>`}
           </div>
         </td>
       </tr>
@@ -2399,9 +2420,11 @@
     }
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">Tidak ada transaksi POS pada rentang tanggal ini.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">Tidak ada transaksi pada rentang tanggal ini.</td></tr>`;
       return;
     }
+
+    const isKasir = state.currentUser && state.currentUser.role === 'kasir';
 
     tbody.innerHTML = filtered.map(t => {
       const itemCount = t.items.reduce((sum, i) => sum + i.qty, 0);
@@ -2414,15 +2437,17 @@
           <td><span class="badge badge-success">Tunai</span></td>
           <td style="text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
+              ${isKasir ? '' : `
               <button class="btn btn-sm btn-primary btn-edit-pos-tx" data-id="${t.id}" title="Edit Transaksi">
                 <i class="fa-solid fa-pen"></i> Edit
-              </button>
+              </button>`}
               <button class="btn btn-sm btn-secondary btn-view-pos-receipt" data-id="${t.id}" title="Lihat/Cetak Struk">
                 <i class="fa-solid fa-print"></i> Struk
               </button>
+              ${isKasir ? '' : `
               <button class="btn btn-sm btn-danger btn-del-pos-tx" data-id="${t.id}" title="Hapus Transaksi">
                 <i class="fa-solid fa-trash"></i> Hapus
-              </button>
+              </button>`}
             </div>
           </td>
         </tr>
@@ -2910,10 +2935,41 @@
     document.getElementById('rekapWifiTotalOmset').textContent = formatRupiah(totalOmset);
     document.getElementById('rekapWifiTotalTx').textContent = filtered.length + ' Tagihan';
 
+    // Attach event delegation once if not already attached
+    if (!tbody.hasAttribute('data-delegated')) {
+      tbody.setAttribute('data-delegated', 'true');
+      tbody.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.btn-edit-wifi-tx');
+        const printBtn = e.target.closest('.btn-view-wifi-receipt');
+        const delBtn = e.target.closest('.btn-del-wifi-tx');
+
+        if (editBtn) {
+          const id = editBtn.getAttribute('data-id');
+          openEditWifiTxModal(id);
+        }
+
+        if (printBtn) {
+          const id = printBtn.getAttribute('data-id');
+          const tx = state.wifiTx.find(t => String(t.id) === String(id));
+          if (tx) {
+            renderWifiReceipt(tx);
+            openModal('modalWifiReceipt');
+          }
+        }
+
+        if (delBtn) {
+          const id = delBtn.getAttribute('data-id');
+          deleteWifiTx(id);
+        }
+      });
+    }
+
     if (filtered.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">Tidak ada transaksi pembayaran Wifi pada rentang tanggal ini.</td></tr>`;
       return;
     }
+
+    const isKasir = state.currentUser && state.currentUser.role === 'kasir';
 
     tbody.innerHTML = filtered.map(t => `
       <tr>
@@ -2925,44 +2981,21 @@
         <td style="font-weight: 700; color: #34d399;">${formatRupiah(t.amount)}</td>
         <td style="text-align: right;">
           <div style="display: inline-flex; gap: 6px;">
+            ${isKasir ? '' : `
             <button class="btn btn-sm btn-primary btn-edit-wifi-tx" data-id="${t.id}" title="Edit Transaksi">
               <i class="fa-solid fa-pen"></i> Edit
-            </button>
+            </button>`}
             <button class="btn btn-sm btn-secondary btn-view-wifi-receipt" data-id="${t.id}" title="Lihat/Cetak Struk">
               <i class="fa-solid fa-print"></i> Struk
             </button>
+            ${isKasir ? '' : `
             <button class="btn btn-sm btn-danger btn-del-wifi-tx" data-id="${t.id}" title="Hapus Transaksi">
               <i class="fa-solid fa-trash"></i> Hapus
-            </button>
+            </button>`}
           </div>
         </td>
       </tr>
     `).join('');
-
-    tbody.querySelectorAll('.btn-edit-wifi-tx').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.getAttribute('data-id');
-        openEditWifiTxModal(id);
-      });
-    });
-
-    tbody.querySelectorAll('.btn-view-wifi-receipt').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.getAttribute('data-id');
-        const tx = state.wifiTx.find(t => t.id === id);
-        if (tx) {
-          renderWifiReceipt(tx);
-          openModal('modalWifiReceipt');
-        }
-      });
-    });
-
-    tbody.querySelectorAll('.btn-del-wifi-tx').forEach(b => {
-      b.addEventListener('click', () => {
-        const id = b.getAttribute('data-id');
-        deleteWifiTx(id);
-      });
-    });
   }
 
   // ==========================================

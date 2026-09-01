@@ -73,17 +73,19 @@ function initDatabaseSchema() {
       )
     `);
 
-    // 4. Table Customers (Wifi)
+    // 4. Table Customers (Ajib.Net)
     db.run(`
       CREATE TABLE IF NOT EXISTS customers (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
+        phone TEXT,
         address TEXT,
         bandwidth TEXT,
         monthly_amount REAL DEFAULT 0,
         created_at TEXT
       )
     `);
+    db.run(`ALTER TABLE customers ADD COLUMN phone TEXT`, () => {});
 
     // 5. Table POS Transactions
     db.run(`
@@ -159,14 +161,14 @@ function seedDefaultDataIfEmpty() {
     db.get('SELECT COUNT(*) as count FROM customers', (err, row) => {
       if (!err && row.count === 0) {
         const defaultCustomers = [
-          { id: 'c1', name: 'Budi Santoso', address: 'Jl. Pemuda No. 45, RT 01/03', bandwidth: '20 Mbps', monthlyAmount: 150000, createdAt: '2026-01-10' },
-          { id: 'c2', name: 'Siti Rahmawati', address: 'Komp. Asri Indah Block C2', bandwidth: '30 Mbps', monthlyAmount: 200000, createdAt: '2026-02-01' },
-          { id: 'c3', name: 'Ahmad Hidayat', address: 'Dusun Melati RT 04/02 Desa Sukamaju', bandwidth: '10 Mbps', monthlyAmount: 100000, createdAt: '2026-03-15' },
-          { id: 'c4', name: 'Toko Kelontong Berkah', address: 'Jl. Pasar Anyar No. 88', bandwidth: '50 Mbps', monthlyAmount: 300000, createdAt: '2026-04-05' }
+          { id: 'AJIBNET001', name: 'Budi Santoso', phone: '081234567890', address: 'Jl. Pemuda No. 45, RT 01/03', bandwidth: '20 Mbps', monthlyAmount: 150000, createdAt: '2026-01-10' },
+          { id: 'AJIBNET002', name: 'Siti Rahmawati', phone: '085712345678', address: 'Komp. Asri Indah Block C2', bandwidth: '30 Mbps', monthlyAmount: 200000, createdAt: '2026-02-01' },
+          { id: 'AJIBNET003', name: 'Ahmad Hidayat', phone: '088198765432', address: 'Dusun Melati RT 04/02 Desa Sukamaju', bandwidth: '10 Mbps', monthlyAmount: 100000, createdAt: '2026-03-15' },
+          { id: 'AJIBNET004', name: 'Toko Kelontong Berkah', phone: '081399887766', address: 'Jl. Pasar Anyar No. 88', bandwidth: '50 Mbps', monthlyAmount: 300000, createdAt: '2026-04-05' }
         ];
 
-        const stmt = db.prepare('INSERT INTO customers (id, name, address, bandwidth, monthly_amount, created_at) VALUES (?, ?, ?, ?, ?, ?)');
-        defaultCustomers.forEach(c => stmt.run(c.id, c.name, c.address, c.bandwidth, c.monthlyAmount, c.createdAt));
+        const stmt = db.prepare('INSERT INTO customers (id, name, phone, address, bandwidth, monthly_amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        defaultCustomers.forEach(c => stmt.run(c.id, c.name, c.phone, c.address, c.bandwidth, c.monthlyAmount, c.createdAt));
         stmt.finalize();
       }
     });
@@ -251,30 +253,31 @@ app.post('/api/categories', (req, res) => {
 
 // --- 3. Customers API ---
 app.get('/api/customers', (req, res) => {
-  db.all('SELECT id, name, address, bandwidth, monthly_amount as monthlyAmount, created_at as createdAt FROM customers ORDER BY name ASC', [], (err, rows) => {
+  db.all('SELECT id, name, phone, address, bandwidth, monthly_amount as monthlyAmount, created_at as createdAt FROM customers ORDER BY name ASC', [], (err, rows) => {
     if (err) return res.status(500).json({ success: false, error: err.message });
     res.json({ success: true, data: rows });
   });
 });
 
 app.post('/api/customers', (req, res) => {
-  const { id, name, address, bandwidth, monthlyAmount, createdAt } = req.body;
-  const custId = id || 'c_' + Date.now();
+  const { id, name, phone, address, bandwidth, monthlyAmount, createdAt } = req.body;
+  const custId = id || ('AJIBNET' + String(Date.now()).slice(-5));
   const createdDate = createdAt || new Date().toISOString().split('T')[0];
 
   const query = `
-    INSERT INTO customers (id, name, address, bandwidth, monthly_amount, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO customers (id, name, phone, address, bandwidth, monthly_amount, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       name=excluded.name,
+      phone=excluded.phone,
       address=excluded.address,
       bandwidth=excluded.bandwidth,
       monthly_amount=excluded.monthly_amount
   `;
 
-  db.run(query, [custId, name, address, bandwidth, monthlyAmount || 0, createdDate], function (err) {
+  db.run(query, [custId, name, phone || '', address, bandwidth, monthlyAmount || 0, createdDate], function (err) {
     if (err) return res.status(500).json({ success: false, error: err.message });
-    res.json({ success: true, data: { id: custId, name, address, bandwidth, monthlyAmount, createdAt: createdDate } });
+    res.json({ success: true, data: { id: custId, name, phone, address, bandwidth, monthlyAmount, createdAt: createdDate } });
   });
 });
 

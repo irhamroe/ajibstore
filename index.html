@@ -72,15 +72,15 @@
         <div class="nav-group" style="margin-top: 10px;">Ajib.Net</div>
         <a class="nav-item wifi-active" data-tab="pelanggan-wifi">
           <i class="fa-solid fa-users-gear"></i>
-          <span>Pelanggan Wifi</span>
+          <span>Pelanggan</span>
         </a>
         <a class="nav-item wifi-active" data-tab="bayar-wifi">
           <i class="fa-solid fa-wallet"></i>
-          <span>Bayar Wifi</span>
+          <span>Bayar</span>
         </a>
         <a class="nav-item wifi-active" data-tab="rekap-wifi">
           <i class="fa-solid fa-file-invoice-dollar"></i>
-          <span>Rekap Wifi</span>
+          <span>Rekap</span>
         </a>
       </nav>
 
@@ -432,11 +432,11 @@
               <div class="search-input-wrap" style="flex: 1; max-width: 400px;">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" id="searchWifiCustomer" class="form-control"
-                  placeholder="Cari nama / alamat / bandwidth...">
+                  placeholder="Cari nama / HP / alamat / bandwidth...">
               </div>
 
               <button class="btn btn-wifi" id="btnOpenAddCustomer">
-                <i class="fa-solid fa-user-plus"></i> Tambah Pelanggan Ajib.Net
+                <i class="fa-solid fa-user-plus"></i> Tambah Pelanggan
               </button>
             </div>
           </div>
@@ -448,6 +448,7 @@
                   <tr>
                     <th>ID Pelanggan</th>
                     <th>Nama Pelanggan</th>
+                    <th>No. HP</th>
                     <th>Alamat</th>
                     <th>Bandwidth</th>
                     <th>Nominal Bulanan</th>
@@ -857,16 +858,23 @@
   <div class="modal-overlay" id="modalCustomer">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="modalCustomerTitle">Tambah Pelanggan Wifi Ajib.Net</h3>
+        <h3 id="modalCustomerTitle">Tambah Pelanggan</h3>
         <button class="modal-close-btn closeModalBtn" data-modal="modalCustomer">&times;</button>
       </div>
       <form id="formCustomer">
         <input type="hidden" id="custId">
         <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">Nama Pelanggan</label>
-            <input type="text" id="custName" class="form-control form-control-wifi" placeholder="Contoh: Budi Santoso"
-              required>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group">
+              <label class="form-label">Nama Pelanggan</label>
+              <input type="text" id="custName" class="form-control form-control-wifi" placeholder="Contoh: Budi Santoso"
+                required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nomor HP / WhatsApp</label>
+              <input type="text" id="custPhone" class="form-control form-control-wifi" placeholder="Contoh: 081234567890"
+                required>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">Alamat Lengkap</label>
@@ -877,10 +885,18 @@
             <div class="form-group">
               <label class="form-label">Bandwidth Package</label>
               <select id="custBandwidth" class="form-control form-control-wifi" required>
+                <option value="5 Mbps">5 Mbps</option>
                 <option value="10 Mbps">10 Mbps</option>
+                <option value="15 Mbps">15 Mbps</option>
                 <option value="20 Mbps">20 Mbps</option>
+                <option value="25 Mbps">25 Mbps</option>
                 <option value="30 Mbps">30 Mbps</option>
+                <option value="35 Mbps">35 Mbps</option>
+                <option value="40 Mbps">40 Mbps</option>
+                <option value="45 Mbps">45 Mbps</option>
                 <option value="50 Mbps">50 Mbps</option>
+                <option value="60 Mbps">60 Mbps</option>
+                <option value="75 Mbps">75 Mbps</option>
                 <option value="100 Mbps">100 Mbps</option>
               </select>
             </div>
@@ -903,7 +919,7 @@
   <div class="modal-overlay" id="modalWifiReceipt">
     <div class="modal-content" style="max-width: 400px; background: #fff; color: #000;">
       <div class="modal-header" style="border-bottom: 1px solid #ddd;">
-        <h3 style="color: #000;">Bukti Bayar Wifi Ajib.Net</h3>
+        <h3 style="color: #000;">Bukti Bayar Ajib.Net</h3>
         <button class="modal-close-btn closeModalBtn" data-modal="modalWifiReceipt"
           style="color: #000;">&times;</button>
       </div>

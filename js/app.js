@@ -36,10 +36,10 @@
   const DEFAULT_PRODUCTS = [];
 
   const DEFAULT_CUSTOMERS = [
-    { id: 'c1', name: 'Budi Santoso', address: 'Jl. Pemuda No. 45, RT 01/03', bandwidth: '20 Mbps', monthlyAmount: 150000, createdAt: '2026-01-10' },
-    { id: 'c2', name: 'Siti Rahmawati', address: 'Komp. Asri Indah Block C2', bandwidth: '30 Mbps', monthlyAmount: 200000, createdAt: '2026-02-01' },
-    { id: 'c3', name: 'Ahmad Hidayat', address: 'Dusun Melati RT 04/02 Desa Sukamaju', bandwidth: '10 Mbps', monthlyAmount: 100000, createdAt: '2026-03-15' },
-    { id: 'c4', name: 'Toko Kelontong Berkah', address: 'Jl. Pasar Anyar No. 88', bandwidth: '50 Mbps', monthlyAmount: 300000, createdAt: '2026-04-05' }
+    { id: 'AJIBNET001', name: 'Budi Santoso', phone: '081234567890', address: 'Jl. Pemuda No. 45, RT 01/03', bandwidth: '20 Mbps', monthlyAmount: 150000, createdAt: '2026-01-10' },
+    { id: 'AJIBNET002', name: 'Siti Rahmawati', phone: '085712345678', address: 'Komp. Asri Indah Block C2', bandwidth: '30 Mbps', monthlyAmount: 200000, createdAt: '2026-02-01' },
+    { id: 'AJIBNET003', name: 'Ahmad Hidayat', phone: '088198765432', address: 'Dusun Melati RT 04/02 Desa Sukamaju', bandwidth: '10 Mbps', monthlyAmount: 100000, createdAt: '2026-03-15' },
+    { id: 'AJIBNET004', name: 'Toko Kelontong Berkah', phone: '081399887766', address: 'Jl. Pasar Anyar No. 88', bandwidth: '50 Mbps', monthlyAmount: 300000, createdAt: '2026-04-05' }
   ];
 
   let state = {
@@ -1190,9 +1190,9 @@
       'kasir-pos': 'Kasir Toko',
       'rekap-pos': 'Rekap Transaksi Toko',
       'manajemen-user': 'Manajemen Pengguna Aplikasi',
-      'pelanggan-wifi': 'Kelola Pelanggan Wifi Ajib.Net',
+      'pelanggan-wifi': 'Kelola Pelanggan Ajib.Net',
       'bayar-wifi': 'Pembayaran Tagihan Ajib.Net',
-      'rekap-wifi': 'Rekap Pembayaran Wifi Ajib.Net'
+      'rekap-wifi': 'Rekap Pembayaran Ajib.Net'
     };
     document.getElementById('currentPageTitle').textContent = titleMap[tabId] || 'Ajib Store';
 
@@ -2637,21 +2637,23 @@
     document.getElementById('btnOpenAddCustomer').addEventListener('click', () => {
       document.getElementById('formCustomer').reset();
       document.getElementById('custId').value = '';
-      document.getElementById('modalCustomerTitle').textContent = 'Tambah Pelanggan Ajib.Net';
+      if (document.getElementById('custPhone')) document.getElementById('custPhone').value = '';
+      document.getElementById('modalCustomerTitle').textContent = 'Tambah Pelanggan';
       openModal('modalCustomer');
     });
 
     document.getElementById('formCustomer').addEventListener('submit', (e) => {
       e.preventDefault();
-      const id = document.getElementById('custId').value || 'c_' + Date.now();
+      const id = document.getElementById('custId').value || ('AJIBNET' + String(Date.now()).slice(-5));
       const name = document.getElementById('custName').value.trim();
+      const phone = document.getElementById('custPhone') ? document.getElementById('custPhone').value.trim() : '';
       const address = document.getElementById('custAddress').value.trim();
       const bandwidth = document.getElementById('custBandwidth').value;
       const monthlyAmount = parseFloat(document.getElementById('custMonthlyAmount').value);
 
       const existingIndex = state.customers.findIndex(c => c.id === id);
       const custObj = {
-        id, name, address, bandwidth, monthlyAmount,
+        id, name, phone, address, bandwidth, monthlyAmount,
         createdAt: existingIndex >= 0 ? state.customers[existingIndex].createdAt : formatDateIso(new Date())
       };
 
@@ -2678,21 +2680,25 @@
 
     const filtered = state.customers.filter(c => {
       return c.name.toLowerCase().includes(search) || 
+             (c.phone || '').toLowerCase().includes(search) || 
              c.address.toLowerCase().includes(search) || 
-             c.bandwidth.toLowerCase().includes(search);
+             c.bandwidth.toLowerCase().includes(search) ||
+             c.id.toLowerCase().includes(search);
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">Belum ada pelanggan Ajib.Net.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Belum ada pelanggan Ajib.Net.</td></tr>`;
       return;
     }
 
     tbody.innerHTML = filtered.map(c => {
       const isPaidCurrentMonth = state.wifiTx.some(t => t.customerId === c.id && t.periodMonth === currentMonth);
+      const displayId = c.id.startsWith('AJIBNET') ? c.id : ('AJIBNET' + (c.id.replace(/[^0-9]/g, '') || c.id.slice(-4)).padStart(3, '0'));
       return `
         <tr>
-          <td style="font-family: monospace; color: #10b981;">CUST-${c.id.slice(-4)}</td>
+          <td style="font-family: monospace; color: #10b981; font-weight: 700;">${displayId}</td>
           <td style="font-weight: 600;">${c.name}</td>
+          <td style="font-weight: 500;">${c.phone || '-'}</td>
           <td>${c.address}</td>
           <td><span class="badge badge-info">${c.bandwidth}</span></td>
           <td style="font-weight: 700; color: #38bdf8;">${formatRupiah(c.monthlyAmount)}</td>
@@ -2726,10 +2732,11 @@
         if (c) {
           document.getElementById('custId').value = c.id;
           document.getElementById('custName').value = c.name;
+          if (document.getElementById('custPhone')) document.getElementById('custPhone').value = c.phone || '';
           document.getElementById('custAddress').value = c.address;
           document.getElementById('custBandwidth').value = c.bandwidth;
           document.getElementById('custMonthlyAmount').value = c.monthlyAmount;
-          document.getElementById('modalCustomerTitle').textContent = 'Edit Pelanggan Ajib.Net';
+          document.getElementById('modalCustomerTitle').textContent = 'Edit Pelanggan';
           openModal('modalCustomer');
         }
       });

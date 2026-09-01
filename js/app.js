@@ -2303,13 +2303,17 @@
   window.updateCheckoutChange = updateCheckoutChange;
 
   function triggerPrint() {
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
     setTimeout(() => {
       try {
         window.print();
       } catch (err) {
         console.error('Print error:', err);
+        alert('Gagal membuka dialog cetak. Silakan coba tekan Ctrl + P.');
       }
-    }, 100);
+    }, 200);
   }
   window.triggerPrint = triggerPrint;
 

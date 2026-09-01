@@ -1321,7 +1321,7 @@ body {
 
 @media print {
   @page {
-    size: auto;
+    size: 58mm auto;
     margin: 0mm;
   }
   html, body {
@@ -1359,7 +1359,7 @@ body {
     display: block !important;
     position: static !important;
     width: 100% !important;
-    max-width: 80mm !important;
+    max-width: 58mm !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
@@ -1377,13 +1377,15 @@ body {
     display: block !important;
     position: static !important;
     width: 100% !important;
-    max-width: 80mm !important;
+    max-width: 58mm !important;
     margin: 0 !important;
-    padding: 10px !important;
+    padding: 4mm 2mm !important;
     background: #ffffff !important;
     color: #000000 !important;
     box-shadow: none !important;
     border: none !important;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
   }
 }
 

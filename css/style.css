@@ -1799,3 +1799,23 @@ body {
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
 }
 
+/* ==========================================================================
+   Table Matrix Pembayaran Wifi
+   ========================================================================== */
+.table-matrix-pembayaran th {
+  white-space: nowrap;
+  padding: 10px 8px;
+}
+.table-matrix-pembayaran td {
+  white-space: nowrap;
+}
+.badge-paid-cell, .badge-unpaid-cell {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+.badge-paid-cell:hover, .badge-unpaid-cell:hover {
+  transform: scale(1.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+

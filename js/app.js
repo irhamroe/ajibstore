@@ -1192,7 +1192,8 @@
       'manajemen-user': 'Manajemen Pengguna Aplikasi',
       'pelanggan-wifi': 'Kelola Pelanggan Ajib.Net',
       'bayar-wifi': 'Pembayaran Tagihan Ajib.Net',
-      'rekap-wifi': 'Rekap Pembayaran Ajib.Net'
+      'rekap-wifi': 'Rekap Transaksi Wifi Ajib.Net',
+      'rekap-pembayaran-wifi': 'Rekap Status Pembayaran Pelanggan Ajib.Net'
     };
     document.getElementById('currentPageTitle').textContent = titleMap[tabId] || 'Ajib Store';
 
@@ -1209,6 +1210,7 @@
     if (tabId === 'pelanggan-wifi') renderWifiCustomers();
     if (tabId === 'bayar-wifi') renderBayarWifiForm();
     if (tabId === 'rekap-wifi') renderRekapWifi();
+    if (tabId === 'rekap-pembayaran-wifi') renderRekapPembayaranWifi();
   }
 
   function updateClock() {
@@ -2808,6 +2810,7 @@
 
       renderRecentWifiPayments();
       renderWifiCustomers();
+      renderRekapPembayaranWifi();
 
       renderWifiReceipt(tx);
       openModal('modalWifiReceipt');
@@ -3017,6 +3020,167 @@
   }
 
   // ==========================================
+  // 9.5. Rekap Status Pembayaran Wifi (Matrix View)
+  // ==========================================
+  let selectedRekapYear = new Date().getFullYear();
+
+  function initRekapPembayaranWifi() {
+    const yearSelect = document.getElementById('rekapPembayaranYear');
+    if (!yearSelect) return;
+
+    // Populate Year dropdown (current year - 2 to current year + 2)
+    const currentYear = new Date().getFullYear();
+    const yearOptions = [];
+    for (let y = currentYear - 2; y <= currentYear + 2; y++) {
+      yearOptions.push(`<option value="${y}" ${y === selectedRekapYear ? 'selected' : ''}>Tahun ${y}</option>`);
+    }
+    yearSelect.innerHTML = yearOptions.join('');
+
+    yearSelect.addEventListener('change', (e) => {
+      selectedRekapYear = parseInt(e.target.value) || new Date().getFullYear();
+      renderRekapPembayaranWifi();
+    });
+
+    const searchInput = document.getElementById('rekapPembayaranSearch');
+    if (searchInput) {
+      searchInput.addEventListener('input', renderRekapPembayaranWifi);
+    }
+
+    const btnRefresh = document.getElementById('btnRefreshRekapPembayaran');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', renderRekapPembayaranWifi);
+    }
+  }
+
+  function renderRekapPembayaranWifi() {
+    const yearSelect = document.getElementById('rekapPembayaranYear');
+    if (yearSelect && yearSelect.value) {
+      selectedRekapYear = parseInt(yearSelect.value);
+    }
+
+    const search = (document.getElementById('rekapPembayaranSearch')?.value || '').toLowerCase();
+    const tbody = document.getElementById('rekapPembayaranTableBody');
+    if (!tbody) return;
+
+    const filteredCustomers = state.customers.filter(c => {
+      return (c.name || '').toLowerCase().includes(search) || 
+             (c.phone || '').toLowerCase().includes(search) || 
+             (c.address || '').toLowerCase().includes(search) || 
+             (c.id || '').toLowerCase().includes(search);
+    });
+
+    // Update top stat cards
+    const totalCustElem = document.getElementById('rekapPembayaranTotalCust');
+    if (totalCustElem) totalCustElem.textContent = state.customers.length + ' Pelanggan';
+
+    let totalPaidMonthsInYear = 0;
+    let totalUnpaidMonthsInYear = 0;
+
+    if (filteredCustomers.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 30px;">Belum ada data pelanggan Ajib.Net.</td></tr>`;
+      const paidElem = document.getElementById('rekapPembayaranTotalPaidCount');
+      if (paidElem) paidElem.textContent = '0 Bulan';
+      const unpaidElem = document.getElementById('rekapPembayaranTotalUnpaidCount');
+      if (unpaidElem) unpaidElem.textContent = '0 Bulan';
+      return;
+    }
+
+    // Attach event delegation for table body clicks
+    if (!tbody.hasAttribute('data-matrix-delegated')) {
+      tbody.setAttribute('data-matrix-delegated', 'true');
+      tbody.addEventListener('click', (e) => {
+        const paidBadge = e.target.closest('.badge-paid-cell');
+        const unpaidBadge = e.target.closest('.badge-unpaid-cell');
+
+        if (paidBadge) {
+          const txId = paidBadge.getAttribute('data-txid');
+          const tx = state.wifiTx.find(t => String(t.id) === String(txId));
+          if (tx) {
+            renderWifiReceipt(tx);
+            openModal('modalWifiReceipt');
+          }
+        }
+
+        if (unpaidBadge) {
+          const custId = unpaidBadge.getAttribute('data-custid');
+          const periodMonth = unpaidBadge.getAttribute('data-period');
+          switchTab('bayar-wifi');
+          const selectCust = document.getElementById('payWifiCustomerId');
+          if (selectCust) selectCust.value = custId;
+          triggerCustomerSelectChange();
+          const monthInput = document.getElementById('payWifiMonth');
+          if (monthInput && periodMonth) monthInput.value = periodMonth;
+        }
+      });
+    }
+
+    const rows = filteredCustomers.map((c, index) => {
+      const displayId = c.id.startsWith('AJIBNET') ? c.id : ('AJIBNET' + (c.id.replace(/[^0-9]/g, '') || c.id.slice(-4)).padStart(3, '0'));
+      
+      let custPaidCount = 0;
+      let custUnpaidCount = 0;
+
+      const monthCells = [];
+
+      for (let m = 1; m <= 12; m++) {
+        const monthStr = String(m).padStart(2, '0');
+        const periodMonth = `${selectedRekapYear}-${monthStr}`;
+
+        // Find transaction for this customer and month
+        const tx = state.wifiTx.find(t => t.customerId === c.id && t.periodMonth === periodMonth);
+
+        if (tx) {
+          custPaidCount++;
+          totalPaidMonthsInYear++;
+          monthCells.push(`
+            <td style="text-align: center; padding: 6px 4px;">
+              <span class="badge badge-success badge-paid-cell" data-txid="${tx.id}" style="cursor: pointer; font-size: 0.72rem; padding: 4px 6px;" title="Lunas (${formatRupiah(tx.amount)}) - Klik untuk lihat Struk">
+                <i class="fa-solid fa-check"></i> Lunas
+              </span>
+            </td>
+          `);
+        } else {
+          custUnpaidCount++;
+          totalUnpaidMonthsInYear++;
+          monthCells.push(`
+            <td style="text-align: center; padding: 6px 4px;">
+              <span class="badge badge-danger badge-unpaid-cell" data-custid="${c.id}" data-period="${periodMonth}" style="cursor: pointer; font-size: 0.72rem; padding: 4px 6px;" title="Belum Bayar (${periodMonth}) - Klik untuk bayar">
+                <i class="fa-solid fa-xmark"></i> Belum
+              </span>
+            </td>
+          `);
+        }
+      }
+
+      return `
+        <tr>
+          <td style="text-align: center; font-size: 0.85rem; color: var(--text-muted);">${index + 1}</td>
+          <td>
+            <div style="font-weight: 600;">${c.name}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">${displayId} ${c.phone ? '• ' + c.phone : ''}</div>
+          </td>
+          <td>
+            <div style="font-weight: 600; color: #38bdf8; font-size: 0.85rem;">${formatRupiah(c.monthlyAmount)}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${c.bandwidth}</div>
+          </td>
+          ${monthCells.join('')}
+          <td style="text-align: center;">
+            <span class="badge ${custPaidCount === 12 ? 'badge-success' : 'badge-info'}" style="font-weight: 700;">${custPaidCount} / 12</span>
+          </td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = rows.join('');
+
+    const paidElem = document.getElementById('rekapPembayaranTotalPaidCount');
+    if (paidElem) paidElem.textContent = totalPaidMonthsInYear + ' Bulan';
+
+    const unpaidElem = document.getElementById('rekapPembayaranTotalUnpaidCount');
+    if (unpaidElem) unpaidElem.textContent = totalUnpaidMonthsInYear + ' Bulan';
+  }
+
+  // ==========================================
   // 10. Application Initialization
   // ==========================================
   document.addEventListener('DOMContentLoaded', () => {
@@ -3033,6 +3197,7 @@
     initWifiCustomers();
     initBayarWifi();
     initRekapWifi();
+    initRekapPembayaranWifi();
     initEditWifiTx();
 
     // Default Render Dashboard

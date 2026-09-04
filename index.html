@@ -80,7 +80,11 @@
         </a>
         <a class="nav-item wifi-active" data-tab="rekap-wifi">
           <i class="fa-solid fa-file-invoice-dollar"></i>
-          <span>Rekap</span>
+          <span>Rekap Transaksi</span>
+        </a>
+        <a class="nav-item wifi-active" data-tab="rekap-pembayaran-wifi">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>Rekap Pembayaran</span>
         </a>
       </nav>
 
@@ -589,6 +593,84 @@
                 </thead>
                 <tbody id="rekapWifiTableBody">
                   <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. REKAP PEMBAYARAN WIFI TAB (Ajib.Net) -->
+        <section class="tab-pane" id="tab-rekap-pembayaran-wifi">
+          <div class="filter-bar">
+            <div class="filter-group">
+              <label><i class="fa-solid fa-calendar-days"></i> Pilih Tahun:</label>
+              <select id="rekapPembayaranYear" class="form-control" style="width: auto; min-width: 120px;">
+                <!-- Populated dynamically via JS -->
+              </select>
+            </div>
+            <div class="filter-group">
+              <label><i class="fa-solid fa-magnifying-glass"></i> Cari Pelanggan:</label>
+              <input type="text" id="rekapPembayaranSearch" class="form-control" placeholder="Nama, HP, atau Alamat..." style="width: 240px;">
+            </div>
+            <button class="btn btn-wifi" id="btnRefreshRekapPembayaran"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card stat-wifi">
+              <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+              <div class="stat-details">
+                <h3>Total Pelanggan</h3>
+                <div class="stat-value" id="rekapPembayaranTotalCust">0 Pelanggan</div>
+              </div>
+            </div>
+            <div class="stat-card stat-wifi">
+              <div class="stat-icon"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i></div>
+              <div class="stat-details">
+                <h3>Total Tagihan Lunas</h3>
+                <div class="stat-value" id="rekapPembayaranTotalPaidCount">0 Bulan</div>
+              </div>
+            </div>
+            <div class="stat-card stat-wifi">
+              <div class="stat-icon"><i class="fa-solid fa-circle-xmark" style="color: #ef4444;"></i></div>
+              <div class="stat-details">
+                <h3>Total Belum Bayar</h3>
+                <div class="stat-value" id="rekapPembayaranTotalUnpaidCount">0 Bulan</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+              <h3><i class="fa-solid fa-table-list"></i> Matrik Rekap Status Pembayaran Wifi</h3>
+              <div style="display: flex; gap: 12px; font-size: 0.85rem; align-items: center;">
+                <span><span class="badge badge-success"><i class="fa-solid fa-check"></i> Lunas</span> = Sudah Bayar</span>
+                <span><span class="badge badge-danger"><i class="fa-solid fa-xmark"></i> Belum</span> = Belum Bayar</span>
+              </div>
+            </div>
+            <div class="table-responsive" style="overflow-x: auto;">
+              <table class="custom-table table-matrix-pembayaran">
+                <thead>
+                  <tr>
+                    <th style="width: 40px;">No</th>
+                    <th>Nama Pelanggan</th>
+                    <th>Paket / Tarif</th>
+                    <th style="text-align: center;">Jan</th>
+                    <th style="text-align: center;">Feb</th>
+                    <th style="text-align: center;">Mar</th>
+                    <th style="text-align: center;">Apr</th>
+                    <th style="text-align: center;">Mei</th>
+                    <th style="text-align: center;">Jun</th>
+                    <th style="text-align: center;">Jul</th>
+                    <th style="text-align: center;">Ags</th>
+                    <th style="text-align: center;">Sep</th>
+                    <th style="text-align: center;">Okt</th>
+                    <th style="text-align: center;">Nov</th>
+                    <th style="text-align: center;">Des</th>
+                    <th style="text-align: center;">Ringkasan</th>
+                  </tr>
+                </thead>
+                <tbody id="rekapPembayaranTableBody">
+                  <!-- Dynamic rows rendered via JS -->
                 </tbody>
               </table>
             </div>

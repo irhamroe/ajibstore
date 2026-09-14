@@ -307,6 +307,10 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-width: 0;
+  max-width: calc(100vw - var(--sidebar-width));
+  width: calc(100vw - var(--sidebar-width));
+  box-sizing: border-box;
   transition: var(--transition-smooth);
 }
 
@@ -463,10 +467,18 @@ body {
 .content-body {
   padding: 28px;
   flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tab-pane {
   display: none;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -1832,15 +1844,19 @@ body {
    ========================================================================== */
 .table-matrix-wrapper {
   position: relative;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
   max-height: 65vh;
   min-height: 350px;
-  overflow-x: scroll !important;
+  overflow-x: auto !important;
   overflow-y: auto !important;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
   scrollbar-width: auto;
-  scrollbar-color: #64748b #e2e8f0;
+  scrollbar-color: #64748b #f1f5f9;
   cursor: grab;
 }
 
@@ -1898,9 +1914,10 @@ body {
   width: 1900px !important;
   min-width: 1900px !important;
   max-width: 1900px !important;
+  table-layout: fixed !important;
   display: table !important;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
 }
 
 .table-matrix-pembayaran th {

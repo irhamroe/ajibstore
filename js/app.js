@@ -3050,6 +3050,22 @@
     if (btnRefresh) {
       btnRefresh.addEventListener('click', renderRekapPembayaranWifi);
     }
+
+    const btnScrollLeft = document.getElementById('btnScrollMatrixLeft');
+    const btnScrollRight = document.getElementById('btnScrollMatrixRight');
+    const matrixWrapper = document.getElementById('rekapMatrixWrapper');
+
+    if (btnScrollLeft && matrixWrapper) {
+      btnScrollLeft.addEventListener('click', () => {
+        matrixWrapper.scrollBy({ left: -380, behavior: 'smooth' });
+      });
+    }
+
+    if (btnScrollRight && matrixWrapper) {
+      btnScrollRight.addEventListener('click', () => {
+        matrixWrapper.scrollBy({ left: 380, behavior: 'smooth' });
+      });
+    }
   }
 
   function renderRekapPembayaranWifi() {

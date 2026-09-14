@@ -1835,30 +1835,37 @@ body {
   position: relative;
   max-height: 65vh;
   min-height: 350px;
-  overflow-x: scroll !important;
+  overflow-x: auto !important;
   overflow-y: auto !important;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
   scrollbar-width: auto;
   scrollbar-color: #94a3b8 #f1f5f9;
+  cursor: grab;
+}
+
+.table-matrix-wrapper.active-dragging {
+  cursor: grabbing;
+  user-select: none;
+  scroll-behavior: auto;
 }
 
 /* Prominent Custom Scrollbars for Table Matrix */
 .table-matrix-wrapper::-webkit-scrollbar {
-  height: 12px;
+  height: 14px;
   width: 10px;
 }
 
 .table-matrix-wrapper::-webkit-scrollbar-track {
   background: #f1f5f9;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #e2e8f0;
 }
 
 .table-matrix-wrapper::-webkit-scrollbar-thumb {
   background: #94a3b8;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 2px solid #f1f5f9;
 }
 
@@ -1890,8 +1897,9 @@ body {
 }
 
 .table-matrix-pembayaran {
-  min-width: 1460px;
-  width: 100%;
+  min-width: 1900px !important;
+  width: max-content !important;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -1921,43 +1929,43 @@ body {
 .table-matrix-pembayaran tbody td:nth-child(1) {
   position: sticky;
   left: 0;
-  width: 48px;
-  min-width: 48px;
-  max-width: 48px;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
   text-align: center;
-  z-index: 3;
+  z-index: 4;
 }
 
 .table-matrix-pembayaran thead th:nth-child(1) {
   position: sticky;
   left: 0;
   top: 0;
-  width: 48px;
-  min-width: 48px;
-  max-width: 48px;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
   text-align: center;
-  z-index: 15;
+  z-index: 20;
 }
 
 /* Sticky Column 2: Nama Pelanggan */
 .table-matrix-pembayaran tbody td:nth-child(2) {
   position: sticky;
-  left: 48px;
-  width: 220px;
-  min-width: 220px;
+  left: 50px;
+  width: 240px;
+  min-width: 240px;
   max-width: 240px;
-  z-index: 3;
+  z-index: 4;
   box-shadow: 4px 0 8px -3px rgba(0, 0, 0, 0.12);
 }
 
 .table-matrix-pembayaran thead th:nth-child(2) {
   position: sticky;
-  left: 48px;
+  left: 50px;
   top: 0;
-  width: 220px;
-  min-width: 220px;
+  width: 240px;
+  min-width: 240px;
   max-width: 240px;
-  z-index: 15;
+  z-index: 20;
   box-shadow: 4px 0 8px -3px rgba(0, 0, 0, 0.12);
 }
 
@@ -1997,23 +2005,26 @@ body {
 /* Paket / Tarif Column */
 .table-matrix-pembayaran th:nth-child(3),
 .table-matrix-pembayaran td:nth-child(3) {
-  min-width: 130px;
-  width: 130px;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
 }
 
 /* Month Columns (Jan - Des: columns 4 to 15) */
 .table-matrix-pembayaran th:nth-child(n+4):nth-child(-n+15),
 .table-matrix-pembayaran td:nth-child(n+4):nth-child(-n+15) {
-  min-width: 80px;
-  width: 80px;
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
   text-align: center;
 }
 
 /* Ringkasan Column (column 16) */
 .table-matrix-pembayaran th:nth-child(16),
 .table-matrix-pembayaran td:nth-child(16) {
-  min-width: 110px;
-  width: 110px;
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
   text-align: center;
 }
 

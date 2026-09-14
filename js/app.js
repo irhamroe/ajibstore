@@ -3050,6 +3050,54 @@
     if (btnRefresh) {
       btnRefresh.addEventListener('click', renderRekapPembayaranWifi);
     }
+
+    initMatrixDragScroll();
+  }
+
+  function initMatrixDragScroll() {
+    const slider = document.getElementById('rekapMatrixWrapper');
+    if (!slider || slider.hasAttribute('data-drag-initialized')) return;
+    slider.setAttribute('data-drag-initialized', 'true');
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    slider.addEventListener('mousedown', (e) => {
+      // Don't trigger drag on badge clicks
+      if (e.target.closest('.badge-paid-cell') || e.target.closest('.badge-unpaid-cell')) return;
+      isDown = true;
+      slider.classList.add('active-dragging');
+      startX = e.pageX - slider.offsetLeft;
+      scrollLeft = slider.scrollLeft;
+    });
+
+    slider.addEventListener('mouseleave', () => {
+      isDown = false;
+      slider.classList.remove('active-dragging');
+    });
+
+    slider.addEventListener('mouseup', () => {
+      isDown = false;
+      slider.classList.remove('active-dragging');
+    });
+
+    slider.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - slider.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      slider.scrollLeft = scrollLeft - walk;
+    });
+
+    // Support horizontal scrolling with mouse wheel over the matrix table
+    slider.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0 && !e.shiftKey) {
+        if (slider.scrollWidth > slider.clientWidth) {
+          slider.scrollLeft += e.deltaY;
+        }
+      }
+    }, { passive: true });
   }
 
   function renderRekapPembayaranWifi() {

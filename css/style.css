@@ -1831,50 +1831,48 @@ body {
    Table Matrix Pembayaran Wifi
    ========================================================================== */
 .table-matrix-wrapper {
-  scroll-behavior: smooth;
   position: relative;
   max-height: 65vh;
   min-height: 350px;
-  overflow-x: auto !important;
+  overflow-x: scroll !important;
   overflow-y: auto !important;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
   scrollbar-width: auto;
-  scrollbar-color: #94a3b8 #f1f5f9;
+  scrollbar-color: #64748b #e2e8f0;
   cursor: grab;
 }
 
 .table-matrix-wrapper.active-dragging {
   cursor: grabbing;
   user-select: none;
-  scroll-behavior: auto;
 }
 
 /* Prominent Custom Scrollbars for Table Matrix */
 .table-matrix-wrapper::-webkit-scrollbar {
-  height: 14px;
-  width: 10px;
+  height: 14px !important;
+  width: 10px !important;
 }
 
 .table-matrix-wrapper::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f1f5f9 !important;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1 !important;
 }
 
 .table-matrix-wrapper::-webkit-scrollbar-thumb {
-  background: #94a3b8;
+  background: #64748b !important;
   border-radius: 8px;
   border: 2px solid #f1f5f9;
 }
 
 .table-matrix-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #334155 !important;
 }
 
 .table-matrix-wrapper::-webkit-scrollbar-thumb:active {
-  background: #475569;
+  background: #0f172a !important;
 }
 
 /* Dark mode scrollbar */
@@ -1883,23 +1881,24 @@ body {
 }
 
 [data-theme="dark"] .table-matrix-wrapper::-webkit-scrollbar-track {
-  background: #1e293b;
-  border-color: #334155;
+  background: #1e293b !important;
+  border-color: #334155 !important;
 }
 
 [data-theme="dark"] .table-matrix-wrapper::-webkit-scrollbar-thumb {
-  background: #64748b;
+  background: #64748b !important;
   border: 2px solid #1e293b;
 }
 
 [data-theme="dark"] .table-matrix-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #94a3b8 !important;
 }
 
 .table-matrix-pembayaran {
+  width: 1900px !important;
   min-width: 1900px !important;
-  width: max-content !important;
-  table-layout: fixed;
+  max-width: 1900px !important;
+  display: table !important;
   border-collapse: separate;
   border-spacing: 0;
 }

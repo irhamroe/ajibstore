@@ -3072,17 +3072,14 @@
       scrollLeft = slider.scrollLeft;
     });
 
-    slider.addEventListener('mouseleave', () => {
-      isDown = false;
-      slider.classList.remove('active-dragging');
+    window.addEventListener('mouseup', () => {
+      if (isDown) {
+        isDown = false;
+        slider.classList.remove('active-dragging');
+      }
     });
 
-    slider.addEventListener('mouseup', () => {
-      isDown = false;
-      slider.classList.remove('active-dragging');
-    });
-
-    slider.addEventListener('mousemove', (e) => {
+    window.addEventListener('mousemove', (e) => {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - slider.offsetLeft;

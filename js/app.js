@@ -980,6 +980,7 @@
   // ==========================================
   const paginationState = {
     products: { page: 1, perPage: 10 },
+    posProducts: { page: 1, perPage: 12 },
     wifiCustomers: { page: 1, perPage: 10 },
     rekapPembayaran: { page: 1, perPage: 10 }
   };
@@ -991,6 +992,7 @@
    *   - totalItems: number
    *   - currentPage: number
    *   - perPage: number
+   *   - sizeOptions: number[] (optional)
    *   - theme: 'pos' | 'wifi' (default 'pos')
    *   - label: string (e.g. 'barang', 'pelanggan')
    *   - onPageChange: function(newPage)
@@ -1001,6 +1003,7 @@
     totalItems,
     currentPage,
     perPage,
+    sizeOptions = [10, 25, 50, 100],
     theme = 'pos',
     label = 'data',
     onPageChange,
@@ -1053,10 +1056,7 @@
         <div class="pagination-per-page">
           <label>Tampilkan:</label>
           <select class="pagination-select-size">
-            <option value="10" ${perPage === 10 ? 'selected' : ''}>10</option>
-            <option value="25" ${perPage === 25 ? 'selected' : ''}>25</option>
-            <option value="50" ${perPage === 50 ? 'selected' : ''}>50</option>
-            <option value="100" ${perPage === 100 ? 'selected' : ''}>100</option>
+            ${sizeOptions.map(opt => `<option value="${opt}" ${perPage === opt ? 'selected' : ''}>${opt}</option>`).join('')}
           </select>
           <span>per hal</span>
         </div>
@@ -1891,6 +1891,7 @@
           pillsContainer.querySelectorAll('button').forEach(b => b.classList.remove('active-pill'));
           btn.classList.add('active-pill');
           state.posCategoryFilter = btn.getAttribute('data-cat');
+          paginationState.posProducts.page = 1;
           renderPosProducts();
         });
       });
@@ -2159,6 +2160,7 @@
     // POS Search Input & Camera Trigger
     const posSearch = document.getElementById('posSearchProduct');
     posSearch.addEventListener('input', () => {
+      paginationState.posProducts.page = 1;
       renderPosProducts();
       // If barcode exact match found, auto add to cart
       const val = posSearch.value.trim();
@@ -2176,6 +2178,7 @@
         document.querySelectorAll('#posCategoryPills button').forEach(b => b.classList.remove('active-pill'));
         btn.classList.add('active-pill');
         state.posCategoryFilter = btn.getAttribute('data-cat');
+        paginationState.posProducts.page = 1;
         renderPosProducts();
       });
     });
@@ -2264,22 +2267,41 @@
   }
 
   function renderPosProducts() {
-    const search = (document.getElementById('posSearchProduct').value || '').toLowerCase();
+    const search = (document.getElementById('posSearchProduct')?.value || '').toLowerCase();
     const cat = state.posCategoryFilter;
     const grid = document.getElementById('posProductGrid');
+    if (!grid) return;
 
     const filtered = state.products.filter(p => {
-      const matchSearch = p.name.toLowerCase().includes(search) || p.barcode.toLowerCase().includes(search);
+      const matchSearch = (p.name || '').toLowerCase().includes(search) || (p.barcode || '').toLowerCase().includes(search);
       const matchCat = cat === 'all' || p.category === cat;
       return matchSearch && matchCat;
     });
 
+    const total = filtered.length;
+    const { page, perPage } = paginationState.posProducts;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    if (paginationState.posProducts.page > totalPages) {
+      paginationState.posProducts.page = totalPages;
+    }
+    const currPage = paginationState.posProducts.page;
+    const startIdx = (currPage - 1) * perPage;
+    const pageItems = filtered.slice(startIdx, startIdx + perPage);
+
     if (filtered.length === 0) {
       grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">Tidak ada produk yang cocok.</div>`;
+      renderPaginationComponent({
+        containerId: 'posProductPagination',
+        totalItems: 0,
+        currentPage: 1,
+        perPage: perPage,
+        theme: 'pos',
+        label: 'produk'
+      });
       return;
     }
 
-    grid.innerHTML = filtered.map(p => `
+    grid.innerHTML = pageItems.map(p => `
       <div class="product-item-card" data-id="${p.id}">
         <div class="prod-img-box">
           ${p.image ? `<img src="${p.image}" alt="${p.name}">` : `<i class="fa-solid fa-box-open"></i>`}
@@ -2305,6 +2327,25 @@
           addToCart(product);
         }
       });
+    });
+
+    renderPaginationComponent({
+      containerId: 'posProductPagination',
+      totalItems: total,
+      currentPage: currPage,
+      perPage: perPage,
+      sizeOptions: [8, 12, 24, 48],
+      theme: 'pos',
+      label: 'produk',
+      onPageChange: (newPage) => {
+        paginationState.posProducts.page = newPage;
+        renderPosProducts();
+      },
+      onPerPageChange: (newPerPage) => {
+        paginationState.posProducts.perPage = newPerPage;
+        paginationState.posProducts.page = 1;
+        renderPosProducts();
+      }
     });
   }
 

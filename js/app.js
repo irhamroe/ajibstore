@@ -2884,7 +2884,6 @@
       <div class="receipt-header">
         <h2>AJIB.NET</h2>
         <div style="font-size: 0.74rem; margin-top: 2px; line-height: 1.3;">Jl. Al Hidayah No. 27 Dsn. Pagotan Ds. Keplaksari Peterongan Jombang</div>
-        <div style="font-size: 0.72rem; color: #555; margin-top: 3px;">Layanan Wifi & Internet Cepat</div>
       </div>
       <div class="receipt-row">
         <span>No. Kuitansi:</span>

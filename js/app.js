@@ -976,6 +976,165 @@
   }
 
   // ==========================================
+  // 1C. Pagination State & Component Helper
+  // ==========================================
+  const paginationState = {
+    products: { page: 1, perPage: 10 },
+    wifiCustomers: { page: 1, perPage: 10 },
+    rekapPembayaran: { page: 1, perPage: 10 }
+  };
+
+  /**
+   * Universal Pagination Controller & Renderer
+   * @param {Object} options
+   *   - containerId: string (id of container element)
+   *   - totalItems: number
+   *   - currentPage: number
+   *   - perPage: number
+   *   - theme: 'pos' | 'wifi' (default 'pos')
+   *   - label: string (e.g. 'barang', 'pelanggan')
+   *   - onPageChange: function(newPage)
+   *   - onPerPageChange: function(newPerPage)
+   */
+  function renderPaginationComponent({
+    containerId,
+    totalItems,
+    currentPage,
+    perPage,
+    theme = 'pos',
+    label = 'data',
+    onPageChange,
+    onPerPageChange
+  }) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (totalItems === 0) {
+      container.innerHTML = '';
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'flex';
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+    const safePage = Math.min(Math.max(1, currentPage), totalPages);
+
+    const startIdx = (safePage - 1) * perPage + 1;
+    const endIdx = Math.min(safePage * perPage, totalItems);
+
+    // Build page numbers with smart windowing & ellipsis
+    const pageNumbers = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+      pageNumbers.push(1);
+      if (safePage > 3) pageNumbers.push('...');
+      
+      const startRange = Math.max(2, safePage - 1);
+      const endRange = Math.min(totalPages - 1, safePage + 1);
+      
+      for (let i = startRange; i <= endRange; i++) {
+        if (!pageNumbers.includes(i)) pageNumbers.push(i);
+      }
+      
+      if (safePage < totalPages - 2) pageNumbers.push('...');
+      if (!pageNumbers.includes(totalPages)) pageNumbers.push(totalPages);
+    }
+
+    const isWifiTheme = theme === 'wifi';
+    const activeClass = isWifiTheme ? 'active pagination-wifi' : 'active';
+
+    container.innerHTML = `
+      <div class="pagination-left">
+        <div class="pagination-info">
+          Menampilkan <strong>${startIdx} - ${endIdx}</strong> dari <strong>${totalItems}</strong> ${label}
+        </div>
+        <div class="pagination-per-page">
+          <label>Tampilkan:</label>
+          <select class="pagination-select-size">
+            <option value="10" ${perPage === 10 ? 'selected' : ''}>10</option>
+            <option value="25" ${perPage === 25 ? 'selected' : ''}>25</option>
+            <option value="50" ${perPage === 50 ? 'selected' : ''}>50</option>
+            <option value="100" ${perPage === 100 ? 'selected' : ''}>100</option>
+          </select>
+          <span>per hal</span>
+        </div>
+      </div>
+      <div class="pagination-nav">
+        <button class="pagination-btn btn-first" ${safePage === 1 ? 'disabled' : ''} title="Halaman Pertama">
+          <i class="fa-solid fa-angles-left"></i>
+        </button>
+        <button class="pagination-btn btn-prev" ${safePage === 1 ? 'disabled' : ''} title="Halaman Sebelumnya">
+          <i class="fa-solid fa-angle-left"></i>
+        </button>
+        ${pageNumbers.map(p => {
+          if (p === '...') {
+            return `<span class="pagination-ellipsis">&hellip;</span>`;
+          }
+          return `
+            <button class="pagination-btn btn-num ${p === safePage ? activeClass : ''}" data-page="${p}">
+              ${p}
+            </button>
+          `;
+        }).join('')}
+        <button class="pagination-btn btn-next" ${safePage === totalPages ? 'disabled' : ''} title="Halaman Berikutnya">
+          <i class="fa-solid fa-angle-right"></i>
+        </button>
+        <button class="pagination-btn btn-last" ${safePage === totalPages ? 'disabled' : ''} title="Halaman Terakhir">
+          <i class="fa-solid fa-angles-right"></i>
+        </button>
+      </div>
+    `;
+
+    // Attach Event Listeners
+    const sizeSelect = container.querySelector('.pagination-select-size');
+    if (sizeSelect) {
+      sizeSelect.addEventListener('change', (e) => {
+        const newSize = parseInt(e.target.value, 10) || 10;
+        if (typeof onPerPageChange === 'function') onPerPageChange(newSize);
+      });
+    }
+
+    const btnFirst = container.querySelector('.btn-first');
+    if (btnFirst && safePage > 1) {
+      btnFirst.addEventListener('click', () => {
+        if (typeof onPageChange === 'function') onPageChange(1);
+      });
+    }
+
+    const btnPrev = container.querySelector('.btn-prev');
+    if (btnPrev && safePage > 1) {
+      btnPrev.addEventListener('click', () => {
+        if (typeof onPageChange === 'function') onPageChange(safePage - 1);
+      });
+    }
+
+    const btnNext = container.querySelector('.btn-next');
+    if (btnNext && safePage < totalPages) {
+      btnNext.addEventListener('click', () => {
+        if (typeof onPageChange === 'function') onPageChange(safePage + 1);
+      });
+    }
+
+    const btnLast = container.querySelector('.btn-last');
+    if (btnLast && safePage < totalPages) {
+      btnLast.addEventListener('click', () => {
+        if (typeof onPageChange === 'function') onPageChange(totalPages);
+      });
+    }
+
+    container.querySelectorAll('.btn-num').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetPage = parseInt(btn.getAttribute('data-page'), 10);
+        if (targetPage && targetPage !== safePage) {
+          if (typeof onPageChange === 'function') onPageChange(targetPage);
+        }
+      });
+    });
+  }
+
+  // ==========================================
   // 2. Navigation & UI Router
   // ==========================================
   function initNavigation() {
@@ -1847,8 +2006,14 @@
       renderPosProducts();
     });
 
-    document.getElementById('searchProductInput').addEventListener('input', renderProductTable);
-    document.getElementById('filterProductCategory').addEventListener('change', renderProductTable);
+    document.getElementById('searchProductInput').addEventListener('input', () => {
+      paginationState.products.page = 1;
+      renderProductTable();
+    });
+    document.getElementById('filterProductCategory').addEventListener('change', () => {
+      paginationState.products.page = 1;
+      renderProductTable();
+    });
 
     // Event Delegation for Edit & Delete buttons on productTableBody
     const tbody = document.getElementById('productTableBody');
@@ -1925,12 +2090,30 @@
       return matchSearch && matchCat;
     });
 
+    const total = filtered.length;
+    const { page, perPage } = paginationState.products;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    if (paginationState.products.page > totalPages) {
+      paginationState.products.page = totalPages;
+    }
+    const currPage = paginationState.products.page;
+    const startIdx = (currPage - 1) * perPage;
+    const pageItems = filtered.slice(startIdx, startIdx + perPage);
+
     if (filtered.length === 0) {
       tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Tidak ada data barang ditemukan.</td></tr>`;
+      renderPaginationComponent({
+        containerId: 'productPagination',
+        totalItems: 0,
+        currentPage: 1,
+        perPage: perPage,
+        theme: 'pos',
+        label: 'barang'
+      });
       return;
     }
 
-    tbody.innerHTML = filtered.map(p => `
+    tbody.innerHTML = pageItems.map(p => `
       <tr>
         <td style="font-family: monospace; color: var(--accent-pos); font-weight: 600;">${p.barcode || '-'}</td>
         <td style="font-weight: 600;">${p.name || '-'}</td>
@@ -1949,6 +2132,24 @@
         </td>
       </tr>
     `).join('');
+
+    renderPaginationComponent({
+      containerId: 'productPagination',
+      totalItems: total,
+      currentPage: currPage,
+      perPage: perPage,
+      theme: 'pos',
+      label: 'barang',
+      onPageChange: (newPage) => {
+        paginationState.products.page = newPage;
+        renderProductTable();
+      },
+      onPerPageChange: (newPerPage) => {
+        paginationState.products.perPage = newPerPage;
+        paginationState.products.page = 1;
+        renderProductTable();
+      }
+    });
   }
 
   // ==========================================
@@ -2671,12 +2872,16 @@
       renderWifiCustomers();
     });
 
-    document.getElementById('searchWifiCustomer').addEventListener('input', renderWifiCustomers);
+    document.getElementById('searchWifiCustomer').addEventListener('input', () => {
+      paginationState.wifiCustomers.page = 1;
+      renderWifiCustomers();
+    });
   }
 
   function renderWifiCustomers() {
     const search = (document.getElementById('searchWifiCustomer').value || '').toLowerCase();
     const tbody = document.getElementById('wifiCustomerTableBody');
+    if (!tbody) return;
 
     const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
@@ -2688,12 +2893,30 @@
              c.id.toLowerCase().includes(search);
     });
 
+    const total = filtered.length;
+    const { page, perPage } = paginationState.wifiCustomers;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    if (paginationState.wifiCustomers.page > totalPages) {
+      paginationState.wifiCustomers.page = totalPages;
+    }
+    const currPage = paginationState.wifiCustomers.page;
+    const startIdx = (currPage - 1) * perPage;
+    const pageItems = filtered.slice(startIdx, startIdx + perPage);
+
     if (filtered.length === 0) {
       tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Belum ada pelanggan Ajib.Net.</td></tr>`;
+      renderPaginationComponent({
+        containerId: 'wifiCustomerPagination',
+        totalItems: 0,
+        currentPage: 1,
+        perPage: perPage,
+        theme: 'wifi',
+        label: 'pelanggan'
+      });
       return;
     }
 
-    tbody.innerHTML = filtered.map(c => {
+    tbody.innerHTML = pageItems.map(c => {
       const isPaidCurrentMonth = state.wifiTx.some(t => t.customerId === c.id && t.periodMonth === currentMonth);
       const displayId = c.id.startsWith('AJIBNET') ? c.id : ('AJIBNET' + (c.id.replace(/[^0-9]/g, '') || c.id.slice(-4)).padStart(3, '0'));
       return `
@@ -2717,6 +2940,24 @@
         </tr>
       `;
     }).join('');
+
+    renderPaginationComponent({
+      containerId: 'wifiCustomerPagination',
+      totalItems: total,
+      currentPage: currPage,
+      perPage: perPage,
+      theme: 'wifi',
+      label: 'pelanggan',
+      onPageChange: (newPage) => {
+        paginationState.wifiCustomers.page = newPage;
+        renderWifiCustomers();
+      },
+      onPerPageChange: (newPerPage) => {
+        paginationState.wifiCustomers.perPage = newPerPage;
+        paginationState.wifiCustomers.page = 1;
+        renderWifiCustomers();
+      }
+    });
 
     tbody.querySelectorAll('.btn-pay-cust').forEach(b => {
       b.addEventListener('click', () => {
@@ -3037,17 +3278,24 @@
 
     yearSelect.addEventListener('change', (e) => {
       selectedRekapYear = parseInt(e.target.value) || new Date().getFullYear();
+      paginationState.rekapPembayaran.page = 1;
       renderRekapPembayaranWifi();
     });
 
     const searchInput = document.getElementById('rekapPembayaranSearch');
     if (searchInput) {
-      searchInput.addEventListener('input', renderRekapPembayaranWifi);
+      searchInput.addEventListener('input', () => {
+        paginationState.rekapPembayaran.page = 1;
+        renderRekapPembayaranWifi();
+      });
     }
 
     const btnRefresh = document.getElementById('btnRefreshRekapPembayaran');
     if (btnRefresh) {
-      btnRefresh.addEventListener('click', renderRekapPembayaranWifi);
+      btnRefresh.addEventListener('click', () => {
+        paginationState.rekapPembayaran.page = 1;
+        renderRekapPembayaranWifi();
+      });
     }
 
     initMatrixDragScroll();
@@ -3111,12 +3359,44 @@
     let totalPaidMonthsInYear = 0;
     let totalUnpaidMonthsInYear = 0;
 
+    // Calculate totals for all matching customers in this year
+    filteredCustomers.forEach(c => {
+      for (let m = 1; m <= 12; m++) {
+        const monthStr = String(m).padStart(2, '0');
+        const periodMonth = `${selectedRekapYear}-${monthStr}`;
+        const tx = state.wifiTx.find(t => t.customerId === c.id && t.periodMonth === periodMonth);
+        if (tx) {
+          totalPaidMonthsInYear++;
+        } else {
+          totalUnpaidMonthsInYear++;
+        }
+      }
+    });
+
+    const total = filteredCustomers.length;
+    const { page, perPage } = paginationState.rekapPembayaran;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    if (paginationState.rekapPembayaran.page > totalPages) {
+      paginationState.rekapPembayaran.page = totalPages;
+    }
+    const currPage = paginationState.rekapPembayaran.page;
+    const startIdx = (currPage - 1) * perPage;
+    const pageCustomers = filteredCustomers.slice(startIdx, startIdx + perPage);
+
     if (filteredCustomers.length === 0) {
       tbody.innerHTML = `<tr><td colspan="16" style="text-align: center; color: var(--text-muted); padding: 30px;">Belum ada data pelanggan Ajib.Net.</td></tr>`;
       const paidElem = document.getElementById('rekapPembayaranTotalPaidCount');
       if (paidElem) paidElem.textContent = '0 Bulan';
       const unpaidElem = document.getElementById('rekapPembayaranTotalUnpaidCount');
       if (unpaidElem) unpaidElem.textContent = '0 Bulan';
+      renderPaginationComponent({
+        containerId: 'rekapPembayaranPagination',
+        totalItems: 0,
+        currentPage: 1,
+        perPage: perPage,
+        theme: 'wifi',
+        label: 'pelanggan'
+      });
       return;
     }
 
@@ -3149,12 +3429,11 @@
       });
     }
 
-    const rows = filteredCustomers.map((c, index) => {
+    const rows = pageCustomers.map((c, index) => {
       const displayId = c.id.startsWith('AJIBNET') ? c.id : ('AJIBNET' + (c.id.replace(/[^0-9]/g, '') || c.id.slice(-4)).padStart(3, '0'));
+      const rowNo = startIdx + index + 1;
       
       let custPaidCount = 0;
-      let custUnpaidCount = 0;
-
       const monthCells = [];
 
       for (let m = 1; m <= 12; m++) {
@@ -3166,7 +3445,6 @@
 
         if (tx) {
           custPaidCount++;
-          totalPaidMonthsInYear++;
           monthCells.push(`
             <td style="text-align: center; padding: 6px 4px;">
               <span class="badge badge-success badge-paid-cell" data-txid="${tx.id}" style="cursor: pointer; font-size: 0.72rem; padding: 4px 6px;" title="Lunas (${formatRupiah(tx.amount)}) - Klik untuk lihat Struk">
@@ -3175,8 +3453,6 @@
             </td>
           `);
         } else {
-          custUnpaidCount++;
-          totalUnpaidMonthsInYear++;
           monthCells.push(`
             <td style="text-align: center; padding: 6px 4px;">
               <span class="badge badge-danger badge-unpaid-cell" data-custid="${c.id}" data-period="${periodMonth}" style="cursor: pointer; font-size: 0.72rem; padding: 4px 6px;" title="Belum Bayar (${periodMonth}) - Klik untuk bayar">
@@ -3189,7 +3465,7 @@
 
       return `
         <tr>
-          <td style="text-align: center; font-size: 0.85rem; color: var(--text-muted);">${index + 1}</td>
+          <td style="text-align: center; font-size: 0.85rem; color: var(--text-muted);">${rowNo}</td>
           <td>
             <div style="font-weight: 600;">${c.name}</div>
             <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">${displayId} ${c.phone ? '• ' + c.phone : ''}</div>
@@ -3213,6 +3489,24 @@
 
     const unpaidElem = document.getElementById('rekapPembayaranTotalUnpaidCount');
     if (unpaidElem) unpaidElem.textContent = totalUnpaidMonthsInYear + ' Bulan';
+
+    renderPaginationComponent({
+      containerId: 'rekapPembayaranPagination',
+      totalItems: total,
+      currentPage: currPage,
+      perPage: perPage,
+      theme: 'wifi',
+      label: 'pelanggan',
+      onPageChange: (newPage) => {
+        paginationState.rekapPembayaran.page = newPage;
+        renderRekapPembayaranWifi();
+      },
+      onPerPageChange: (newPerPage) => {
+        paginationState.rekapPembayaran.perPage = newPerPage;
+        paginationState.rekapPembayaran.page = 1;
+        renderRekapPembayaranWifi();
+      }
+    });
   }
 
   // ==========================================

@@ -1833,6 +1833,60 @@ body {
 .table-matrix-wrapper {
   scroll-behavior: smooth;
   position: relative;
+  max-height: 65vh;
+  min-height: 350px;
+  overflow-x: scroll !important;
+  overflow-y: auto !important;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  scrollbar-width: auto;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+/* Prominent Custom Scrollbars for Table Matrix */
+.table-matrix-wrapper::-webkit-scrollbar {
+  height: 12px;
+  width: 10px;
+}
+
+.table-matrix-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.table-matrix-wrapper::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 6px;
+  border: 2px solid #f1f5f9;
+}
+
+.table-matrix-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.table-matrix-wrapper::-webkit-scrollbar-thumb:active {
+  background: #475569;
+}
+
+/* Dark mode scrollbar */
+[data-theme="dark"] .table-matrix-wrapper {
+  scrollbar-color: #64748b #1e293b;
+}
+
+[data-theme="dark"] .table-matrix-wrapper::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .table-matrix-wrapper::-webkit-scrollbar-thumb {
+  background: #64748b;
+  border: 2px solid #1e293b;
+}
+
+[data-theme="dark"] .table-matrix-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .table-matrix-pembayaran {
@@ -1854,27 +1908,56 @@ body {
   padding: 10px 8px;
 }
 
+/* Sticky Thead Top */
+.table-matrix-pembayaran thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-muted);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
 /* Sticky Column 1: No */
-.table-matrix-pembayaran th:nth-child(1),
-.table-matrix-pembayaran td:nth-child(1) {
+.table-matrix-pembayaran tbody td:nth-child(1) {
   position: sticky;
   left: 0;
   width: 48px;
   min-width: 48px;
   max-width: 48px;
   text-align: center;
-  z-index: 2;
+  z-index: 3;
+}
+
+.table-matrix-pembayaran thead th:nth-child(1) {
+  position: sticky;
+  left: 0;
+  top: 0;
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+  text-align: center;
+  z-index: 15;
 }
 
 /* Sticky Column 2: Nama Pelanggan */
-.table-matrix-pembayaran th:nth-child(2),
-.table-matrix-pembayaran td:nth-child(2) {
+.table-matrix-pembayaran tbody td:nth-child(2) {
   position: sticky;
   left: 48px;
   width: 220px;
   min-width: 220px;
   max-width: 240px;
-  z-index: 2;
+  z-index: 3;
+  box-shadow: 4px 0 8px -3px rgba(0, 0, 0, 0.12);
+}
+
+.table-matrix-pembayaran thead th:nth-child(2) {
+  position: sticky;
+  left: 48px;
+  top: 0;
+  width: 220px;
+  min-width: 220px;
+  max-width: 240px;
+  z-index: 15;
   box-shadow: 4px 0 8px -3px rgba(0, 0, 0, 0.12);
 }
 
@@ -1882,7 +1965,6 @@ body {
 .table-matrix-pembayaran thead th:nth-child(1),
 .table-matrix-pembayaran thead th:nth-child(2) {
   background: var(--bg-muted);
-  z-index: 4;
 }
 
 /* Sticky Body Cells Backgrounds */

@@ -641,23 +641,13 @@
 
           <div class="glass-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
-              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <h3 style="margin: 0;"><i class="fa-solid fa-table-list"></i> Matrik Rekap Status Pembayaran Wifi</h3>
-                <div style="display: flex; gap: 8px;">
-                  <button type="button" class="btn btn-secondary btn-sm" id="btnScrollMatrixLeft" title="Geser ke Bulan Awal" style="padding: 5px 12px; font-size: 0.8rem; font-weight: 600;">
-                    <i class="fa-solid fa-chevron-left"></i> Geser Kiri
-                  </button>
-                  <button type="button" class="btn btn-secondary btn-sm" id="btnScrollMatrixRight" title="Geser ke Bulan Akhir & Ringkasan" style="padding: 5px 12px; font-size: 0.8rem; font-weight: 600;">
-                    Geser Kanan <i class="fa-solid fa-chevron-right"></i>
-                  </button>
-                </div>
-              </div>
+              <h3 style="margin: 0;"><i class="fa-solid fa-table-list"></i> Matrik Rekap Status Pembayaran Wifi</h3>
               <div style="display: flex; gap: 12px; font-size: 0.85rem; align-items: center; flex-wrap: wrap;">
                 <span><span class="badge badge-success"><i class="fa-solid fa-check"></i> Lunas</span> = Sudah Bayar</span>
                 <span><span class="badge badge-danger"><i class="fa-solid fa-xmark"></i> Belum</span> = Belum Bayar</span>
               </div>
             </div>
-            <div class="table-responsive table-matrix-wrapper" id="rekapMatrixWrapper" style="overflow-x: auto;">
+            <div class="table-responsive table-matrix-wrapper" id="rekapMatrixWrapper">
               <table class="custom-table table-matrix-pembayaran">
                 <thead>
                   <tr>

@@ -3085,15 +3085,6 @@
       const walk = (x - startX) * 1.5;
       slider.scrollLeft = scrollLeft - walk;
     });
-
-    // Support horizontal scrolling with mouse wheel over the matrix table
-    slider.addEventListener('wheel', (e) => {
-      if (e.deltaY !== 0 && !e.shiftKey) {
-        if (slider.scrollWidth > slider.clientWidth) {
-          slider.scrollLeft += e.deltaY;
-        }
-      }
-    }, { passive: true });
   }
 
   function renderRekapPembayaranWifi() {

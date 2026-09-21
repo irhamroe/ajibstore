@@ -291,7 +291,9 @@
               <div class="product-grid" id="posProductGrid">
                 <!-- Products dynamically rendered -->
               </div>
-              <div id="posProductPagination" class="pagination-wrapper" style="margin-top: 16px; background: var(--bg-card); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);"></div>
+              <div id="posProductPagination" class="pagination-wrapper"
+                style="margin-top: 16px; background: var(--bg-card); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+              </div>
             </div>
 
             <!-- Right Side: Cart Panel -->
@@ -444,10 +446,12 @@
               </div>
 
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn btn-secondary" id="btnDownloadCustTemplate" title="Download file format template Excel (.xlsx)">
-                  <i class="fa-solid fa-file-excel" style="color: #10b981;"></i> Format Excel
+                <button class="btn btn-secondary" id="btnDownloadCustTemplate"
+                  title="Download file format template Excel (.xlsx)">
+                  <i class="fa-solid fa-file-excel" style="color: #10b981;"></i> Template Excel
                 </button>
-                <button class="btn btn-wifi" id="btnOpenUploadExcelCustomer" title="Upload data pelanggan dari file Excel">
+                <button class="btn btn-wifi" id="btnOpenUploadExcelCustomer"
+                  title="Upload data pelanggan dari file Excel">
                   <i class="fa-solid fa-file-arrow-up"></i> Upload Excel
                 </button>
                 <button class="btn btn-primary" id="btnOpenAddCustomer">
@@ -1042,20 +1046,26 @@
 
           <!-- Quick Template Download & Instruction Box -->
           <div class="excel-info-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
               <strong style="color: var(--text-main); font-size: 0.9rem;">
                 <i class="fa-solid fa-circle-info" style="color: #3b82f6;"></i> Panduan Kolom Excel:
               </strong>
-              <button type="button" class="btn btn-sm btn-secondary" id="btnDownloadTemplateInsideModal" style="font-size: 0.78rem; padding: 4px 10px;">
+              <button type="button" class="btn btn-sm btn-secondary" id="btnDownloadTemplateInsideModal"
+                style="font-size: 0.78rem; padding: 4px 10px;">
                 <i class="fa-solid fa-download" style="color: #10b981;"></i> Unduh Template (.xlsx)
               </button>
             </div>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; line-height: 1.4;">
-              Pastikan file Excel memiliki baris judul kolom: <strong>Nama Pelanggan*</strong>, <strong>No HP</strong>, <strong>Alamat*</strong>, <strong>Paket Bandwidth*</strong>, <strong>Biaya Bulanan*</strong>, dan <strong>ID Pelanggan</strong> (opsional).
+              Pastikan file Excel memiliki baris judul kolom: <strong>Nama Pelanggan*</strong>, <strong>No HP</strong>,
+              <strong>Alamat*</strong>, <strong>Paket Bandwidth*</strong>, <strong>Biaya Bulanan*</strong>, dan
+              <strong>ID Pelanggan</strong> (opsional).
             </p>
             <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-              <input type="checkbox" id="custExcelUpdateExisting" checked style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-wifi);">
-              <label for="custExcelUpdateExisting" style="font-size: 0.82rem; color: var(--text-body); cursor: pointer; user-select: none;">
+              <input type="checkbox" id="custExcelUpdateExisting" checked
+                style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-wifi);">
+              <label for="custExcelUpdateExisting"
+                style="font-size: 0.82rem; color: var(--text-body); cursor: pointer; user-select: none;">
                 Perbarui data jika ID Pelanggan sudah ada dalam sistem (Update Existing)
               </label>
             </div>
@@ -1064,19 +1074,22 @@
 
         <!-- Step 2: Live Preview Table (Initially hidden until file selected) -->
         <div id="custExcelPreviewSection" style="display: none; margin-top: 20px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <div>
               <h4 style="margin: 0; font-size: 1rem; color: var(--text-main);">
                 <i class="fa-solid fa-list-check" style="color: var(--accent-wifi);"></i> Preview Data Excel
               </h4>
-              <span id="custExcelSummaryText" style="font-size: 0.82rem; color: var(--text-muted);">0 data ditemukan</span>
+              <span id="custExcelSummaryText" style="font-size: 0.82rem; color: var(--text-muted);">0 data
+                ditemukan</span>
             </div>
             <div style="display: flex; gap: 6px;" id="custExcelStatBadges">
               <!-- Render badges: Valid, Invalid, Existing -->
             </div>
           </div>
 
-          <div class="table-responsive" style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+          <div class="table-responsive"
+            style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
             <table class="custom-table" style="margin-bottom: 0;">
               <thead>
                 <tr>
@@ -1098,8 +1111,10 @@
         </div>
       </div>
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
-        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalUploadCustomerExcel">Batal</button>
-        <button type="button" class="btn btn-wifi" id="btnExecuteCustExcelImport" disabled style="padding: 10px 22px; font-weight: 700;">
+        <button type="button" class="btn btn-secondary closeModalBtn"
+          data-modal="modalUploadCustomerExcel">Batal</button>
+        <button type="button" class="btn btn-wifi" id="btnExecuteCustExcelImport" disabled
+          style="padding: 10px 22px; font-weight: 700;">
           <i class="fa-solid fa-file-import"></i> Simpan Data Pelanggan
         </button>
       </div>

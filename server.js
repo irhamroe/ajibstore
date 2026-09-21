@@ -226,6 +226,62 @@ app.post('/api/products', (req, res) => {
   });
 });
 
+app.post('/api/products/batch', (req, res) => {
+  const products = req.body.products;
+  if (!Array.isArray(products) || products.length === 0) {
+    return res.status(400).json({ success: false, error: 'Daftar barang tidak valid atau kosong' });
+  }
+
+  const query = `
+    INSERT INTO products (id, barcode, name, category, cost_price, sell_price, stock, image)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      barcode=excluded.barcode,
+      name=excluded.name,
+      category=excluded.category,
+      cost_price=excluded.cost_price,
+      sell_price=excluded.sell_price,
+      stock=excluded.stock,
+      image=CASE WHEN excluded.image != '' THEN excluded.image ELSE products.image END
+  `;
+
+  db.serialize(() => {
+    db.run('BEGIN TRANSACTION');
+    const stmt = db.prepare(query);
+    let hasError = false;
+
+    products.forEach((p) => {
+      const prodId = p.id || ('p_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
+      const barcode = p.barcode || ('SKU' + Date.now().toString().slice(-6));
+      stmt.run([
+        prodId,
+        barcode,
+        p.name || '',
+        p.category || 'Umum',
+        p.costPrice || 0,
+        p.sellPrice || 0,
+        p.stock || 0,
+        p.image || ''
+      ], (err) => {
+        if (err) hasError = true;
+      });
+    });
+
+    stmt.finalize();
+
+    if (hasError) {
+      db.run('ROLLBACK', () => {
+        res.status(500).json({ success: false, error: 'Gagal memproses batch import barang' });
+      });
+    } else {
+      db.run('COMMIT', (err) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        res.json({ success: true, message: `Berhasil menyimpan ${products.length} barang`, count: products.length });
+      });
+    }
+  });
+});
+
 app.delete('/api/products/:id', (req, res) => {
   db.run('DELETE FROM products WHERE id = ?', [req.params.id], function (err) {
     if (err) return res.status(500).json({ success: false, error: err.message });

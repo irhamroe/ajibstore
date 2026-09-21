@@ -258,6 +258,17 @@
       } catch (e) { console.error('API saveProduct error:', e); }
     },
 
+    async batchSaveProducts(products) {
+      if (!this.isServer && !getApiBaseUrl()) return;
+      try {
+        await fetch(`${getApiBaseUrl()}/api/products/batch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ products })
+        });
+      } catch (e) { console.error('API batchSaveProducts error:', e); }
+    },
+
     async deleteProduct(id) {
       if (!this.isServer && !getApiBaseUrl()) return;
       try {
@@ -1910,9 +1921,428 @@
   }
 
   // ==========================================
+  // 4. Stok Barang Management & Excel Import
+  // ==========================================
+  let parsedExcelProducts = [];
+
+  function downloadProductExcelTemplate() {
+    if (typeof XLSX === 'undefined') {
+      showToast('Library Excel (SheetJS) belum termuat. Periksa koneksi internet!', 'error');
+      return;
+    }
+
+    try {
+      const templateData = [
+        {
+          'Kode Barcode / SKU': 'SKU-KBL-001',
+          'Nama Barang': 'Kabel LAN Cat6 UTP 1.5M',
+          'Kategori': 'Jaringan & Wifi',
+          'Harga Beli (Modal)': 15000,
+          'Harga Jual': 25000,
+          'Jumlah Stok': 30
+        },
+        {
+          'Kode Barcode / SKU': 'SKU-ADP-002',
+          'Nama Barang': 'Adaptor Router 12V 1A',
+          'Kategori': 'Aksesori HP & Laptop',
+          'Harga Beli (Modal)': 35000,
+          'Harga Jual': 55000,
+          'Jumlah Stok': 15
+        },
+        {
+          'Kode Barcode / SKU': '',
+          'Nama Barang': 'Lampu LED Bulb 9 Watt (Barcode Otomatis)',
+          'Kategori': 'Elektronik Rumah',
+          'Harga Beli (Modal)': 18000,
+          'Harga Jual': 28000,
+          'Jumlah Stok': 50
+        }
+      ];
+
+      const ws = XLSX.utils.json_to_sheet(templateData);
+
+      // Set optimal column widths
+      ws['!cols'] = [
+        { wch: 22 }, // Barcode / SKU
+        { wch: 38 }, // Nama Barang
+        { wch: 24 }, // Kategori
+        { wch: 18 }, // Harga Beli
+        { wch: 18 }, // Harga Jual
+        { wch: 14 }  // Jumlah Stok
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Stok_Barang');
+      XLSX.writeFile(wb, 'Template_Stok_Barang_AjibStore.xlsx');
+      showToast('Template Excel Stok Barang berhasil diunduh!', 'success');
+    } catch (err) {
+      console.error('Error generating product Excel template:', err);
+      showToast('Gagal mengunduh template: ' + err.message, 'error');
+    }
+  }
+
+  function initProductExcelImport() {
+    // 1. Trigger Download Template
+    const btnDownload = document.getElementById('btnDownloadProdTemplate');
+    if (btnDownload) {
+      btnDownload.addEventListener('click', downloadProductExcelTemplate);
+    }
+    const btnDownloadInside = document.getElementById('btnDownloadProdTemplateInsideModal');
+    if (btnDownloadInside) {
+      btnDownloadInside.addEventListener('click', downloadProductExcelTemplate);
+    }
+
+    // 2. Open Modal Upload
+    const btnOpenUpload = document.getElementById('btnOpenUploadExcelProduct');
+    if (btnOpenUpload) {
+      btnOpenUpload.addEventListener('click', () => {
+        resetProductExcelUploadModal();
+        openModal('modalUploadProductExcel');
+      });
+    }
+
+    // 3. File Input & Select Button
+    const fileInput = document.getElementById('prodExcelFileInput');
+    const btnSelectFile = document.getElementById('btnSelectProdExcelFile');
+    const dropzone = document.getElementById('prodExcelDropzone');
+
+    if (btnSelectFile && fileInput) {
+      btnSelectFile.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.value = '';
+        fileInput.click();
+      });
+    }
+
+    if (dropzone && fileInput) {
+      dropzone.addEventListener('click', () => {
+        fileInput.value = '';
+        fileInput.click();
+      });
+
+      // Drag & Drop handlers
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('drag-over');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('drag-over');
+        });
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+          handleProductExcelFile(files[0]);
+        }
+      });
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          handleProductExcelFile(e.target.files[0]);
+        }
+      });
+    }
+
+    // 4. Confirm Import Button
+    const btnExecute = document.getElementById('btnExecuteProdExcelImport');
+    if (btnExecute) {
+      btnExecute.addEventListener('click', executeProductExcelImport);
+    }
+  }
+
+  function resetProductExcelUploadModal() {
+    parsedExcelProducts = [];
+    const fileInput = document.getElementById('prodExcelFileInput');
+    if (fileInput) fileInput.value = '';
+
+    const previewSection = document.getElementById('prodExcelPreviewSection');
+    if (previewSection) previewSection.style.display = 'none';
+
+    const tbody = document.getElementById('prodExcelPreviewTableBody');
+    if (tbody) tbody.innerHTML = '';
+
+    const btnExecute = document.getElementById('btnExecuteProdExcelImport');
+    if (btnExecute) {
+      btnExecute.disabled = true;
+      btnExecute.innerHTML = '<i class="fa-solid fa-file-import"></i> Simpan Data Barang';
+    }
+
+    const statBadges = document.getElementById('prodExcelStatBadges');
+    if (statBadges) statBadges.innerHTML = '';
+  }
+
+  function handleProductExcelFile(file) {
+    if (!file) return;
+
+    const validExtensions = ['.xlsx', '.xls', '.csv'];
+    const fileName = file.name.toLowerCase();
+    const isValidExt = validExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!isValidExt) {
+      showToast('Format file tidak didukung! Harap gunakan file .xlsx, .xls, atau .csv', 'error');
+      return;
+    }
+
+    if (typeof XLSX === 'undefined') {
+      showToast('Library Excel belum siap. Periksa koneksi internet Anda!', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: false });
+
+        if (!rawJson || rawJson.length === 0) {
+          showToast('File Excel kosong atau tidak memiliki baris data!', 'warning');
+          return;
+        }
+
+        parseExcelProductRows(rawJson);
+      } catch (err) {
+        console.error('Error reading Excel product file:', err);
+        showToast('Gagal membaca file Excel: ' + err.message, 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function parseExcelProductRows(rows) {
+    parsedExcelProducts = [];
+
+    rows.forEach((row, index) => {
+      const rowKeys = Object.keys(row);
+      const getVal = (possibleKeywords) => {
+        const key = rowKeys.find(k => {
+          const norm = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return possibleKeywords.some(kw => norm.includes(kw));
+        });
+        return key ? String(row[key]).trim() : '';
+      };
+
+      const rawBarcode = getVal(['kodebarcode', 'barcode', 'sku', 'kodesku', 'kodebarang', 'kode', 'code']);
+      const name = getVal(['namabarang', 'namaproduk', 'nama', 'productname', 'itemname', 'item', 'produk']);
+      const category = getVal(['kategori', 'category', 'jenis', 'kelompok', 'tipe']) || (state.categories[0] || 'Umum');
+      const rawCostPrice = getVal(['hargabeli', 'modal', 'hargamodal', 'costprice', 'hpp', 'beli']);
+      const rawSellPrice = getVal(['hargajual', 'jual', 'harga', 'sellprice', 'price']);
+      const rawStock = getVal(['jumlahstok', 'stok', 'stock', 'qty', 'jumlah', 'sisa']);
+
+      const cleanNumber = (val) => {
+        if (!val) return 0;
+        const numStr = String(val).replace(/[^0-9]/g, '');
+        return parseFloat(numStr) || 0;
+      };
+
+      const costPrice = cleanNumber(rawCostPrice);
+      const sellPrice = cleanNumber(rawSellPrice);
+      const stock = parseInt(cleanNumber(rawStock)) || 0;
+
+      const isValid = Boolean(name && name.length >= 2);
+      const isExisting = Boolean(rawBarcode && state.products.some(p => p.barcode && p.barcode.toLowerCase() === rawBarcode.toLowerCase())) ||
+                        state.products.some(p => p.name.toLowerCase() === name.toLowerCase());
+
+      parsedExcelProducts.push({
+        rowNumber: index + 1,
+        barcode: rawBarcode,
+        name: name,
+        category: category,
+        costPrice: costPrice,
+        sellPrice: sellPrice,
+        stock: stock,
+        isValid: isValid,
+        isExisting: isExisting
+      });
+    });
+
+    renderProductExcelPreview();
+  }
+
+  function renderProductExcelPreview() {
+    const previewSection = document.getElementById('prodExcelPreviewSection');
+    const tbody = document.getElementById('prodExcelPreviewTableBody');
+    const summaryText = document.getElementById('prodExcelSummaryText');
+    const statBadges = document.getElementById('prodExcelStatBadges');
+    const btnExecute = document.getElementById('btnExecuteProdExcelImport');
+
+    if (!previewSection || !tbody) return;
+
+    previewSection.style.display = 'block';
+
+    const totalRows = parsedExcelProducts.length;
+    const validRows = parsedExcelProducts.filter(r => r.isValid).length;
+    const invalidRows = totalRows - validRows;
+    const existingRows = parsedExcelProducts.filter(r => r.isValid && r.isExisting).length;
+    const newRows = validRows - existingRows;
+
+    if (summaryText) {
+      summaryText.textContent = `Total: ${totalRows} baris barang terdeteksi`;
+    }
+
+    if (statBadges) {
+      statBadges.innerHTML = `
+        <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> ${newRows} Barang Baru</span>
+        ${existingRows > 0 ? `<span class="badge badge-info"><i class="fa-solid fa-arrows-rotate"></i> ${existingRows} Sudah Terdaftar</span>` : ''}
+        ${invalidRows > 0 ? `<span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation"></i> ${invalidRows} Tidak Valid</span>` : ''}
+      `;
+    }
+
+    if (btnExecute) {
+      btnExecute.disabled = validRows === 0;
+      btnExecute.innerHTML = `<i class="fa-solid fa-file-import"></i> Simpan ${validRows} Barang`;
+    }
+
+    tbody.innerHTML = parsedExcelProducts.map(r => {
+      let statusBadge = '';
+      let rowClass = 'preview-row-valid';
+
+      if (!r.isValid) {
+        rowClass = 'preview-row-error';
+        statusBadge = '<span class="badge badge-danger">Nama Kosong</span>';
+      } else if (r.isExisting) {
+        rowClass = 'preview-row-warning';
+        statusBadge = '<span class="badge badge-info"><i class="fa-solid fa-pen"></i> Update</span>';
+      } else {
+        statusBadge = '<span class="badge badge-success"><i class="fa-solid fa-plus"></i> Baru</span>';
+      }
+
+      const displayBarcode = r.barcode || '<em style="color: var(--text-dim);">(Auto SKU)</em>';
+
+      return `
+        <tr class="${rowClass}">
+          <td style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">${r.rowNumber}</td>
+          <td style="font-family: monospace; font-weight: 600; color: var(--accent-pos);">${displayBarcode}</td>
+          <td style="font-weight: 600;">${r.name || '<em style="color:#ef4444;">(Tidak ada nama)</em>'}</td>
+          <td><span class="badge badge-info">${r.category}</span></td>
+          <td>${formatRupiah(r.costPrice)}</td>
+          <td style="font-weight: 700; color: var(--accent-wifi);">${formatRupiah(r.sellPrice)}</td>
+          <td style="font-weight: 700;">${r.stock}</td>
+          <td style="text-align: center;">${statusBadge}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function executeProductExcelImport() {
+    const validRecords = parsedExcelProducts.filter(r => r.isValid);
+    if (validRecords.length === 0) {
+      showToast('Tidak ada data barang yang valid untuk diimpor!', 'error');
+      return;
+    }
+
+    const updateExisting = document.getElementById('prodExcelUpdateExisting')?.checked ?? true;
+    let addedCount = 0;
+    let updatedCount = 0;
+    const productsToBatch = [];
+
+    validRecords.forEach((r, idx) => {
+      // Auto generate barcode if empty
+      let barcode = r.barcode;
+      if (!barcode) {
+        barcode = 'SKU' + String(Date.now() + idx).slice(-6);
+      }
+
+      // Check if category exists, if not, add to categories
+      if (r.category && !state.categories.includes(r.category)) {
+        state.categories.push(r.category);
+        saveData(STORAGE_KEYS.CATEGORIES);
+        API.addCategory(r.category);
+      }
+
+      // Find if exists by barcode or name
+      let existingIndex = state.products.findIndex(p => p.barcode && p.barcode.toLowerCase() === barcode.toLowerCase());
+      if (existingIndex === -1) {
+        existingIndex = state.products.findIndex(p => p.name.toLowerCase() === r.name.toLowerCase());
+      }
+
+      if (existingIndex >= 0) {
+        if (updateExisting) {
+          const oldProd = state.products[existingIndex];
+          const updatedProd = {
+            id: oldProd.id,
+            barcode: barcode || oldProd.barcode,
+            name: r.name,
+            category: r.category || oldProd.category,
+            costPrice: r.costPrice || oldProd.costPrice,
+            sellPrice: r.sellPrice || oldProd.sellPrice,
+            stock: r.stock !== undefined ? r.stock : oldProd.stock,
+            image: oldProd.image || ''
+          };
+          state.products[existingIndex] = updatedProd;
+          productsToBatch.push(updatedProd);
+          updatedCount++;
+        }
+      } else {
+        const prodId = 'p_' + Date.now() + '_' + idx;
+        const newProd = {
+          id: prodId,
+          barcode: barcode,
+          name: r.name,
+          category: r.category || 'Umum',
+          costPrice: r.costPrice,
+          sellPrice: r.sellPrice,
+          stock: r.stock,
+          image: ''
+        };
+        state.products.push(newProd);
+        productsToBatch.push(newProd);
+        addedCount++;
+      }
+    });
+
+    // 1. Save to LocalStorage
+    saveData(STORAGE_KEYS.PRODUCTS);
+    saveData(STORAGE_KEYS.CATEGORIES);
+
+    // 2. Push to Firebase Cloud
+    pushToFirebase();
+
+    // 3. Save to SQLite Backend via Batch API
+    API.batchSaveProducts(productsToBatch);
+
+    // 4. Re-render views
+    paginationState.products.page = 1;
+    paginationState.posProducts.page = 1;
+    renderCategoryDropdowns();
+    renderProductTable();
+    renderPosProducts();
+    renderDashboard();
+
+    // 5. Close Modal & Notification
+    closeModal('modalUploadProductExcel');
+
+    const totalProcessed = addedCount + updatedCount;
+    let msg = `Berhasil memproses ${totalProcessed} data stok barang!`;
+    if (addedCount > 0 && updatedCount > 0) {
+      msg = `Berhasil menambahkan ${addedCount} barang baru dan memperbarui ${updatedCount} data barang!`;
+    } else if (addedCount > 0) {
+      msg = `Berhasil menambahkan ${addedCount} barang baru!`;
+    } else if (updatedCount > 0) {
+      msg = `Berhasil memperbarui ${updatedCount} data barang!`;
+    }
+
+    showToast(msg, 'success', 4500);
+  }
+
+  // ==========================================
   // 4. Products Management (Stok Barang)
   // ==========================================
   function initProductManagement() {
+    initProductExcelImport();
     const prodImgInput = document.getElementById('prodImageInput');
     const prodImgPreview = document.getElementById('prodImagePreview');
     const prodImgPlaceholder = document.getElementById('prodImagePlaceholderIcon');

@@ -7,10 +7,12 @@ Aplikasi Point of Sale (POS) Toko Elektronik dan Sistem Manajemen & Pembayaran W
 ## 🌟 Fitur Utama
 
 ### 🏬 1. Point of Sales (POS Toko Elektronik)
-- **Manajemen Stok Barang**: Input, edit, hapus, dan kelola stok barang (Nama, Kategori dinamis, Foto Produk, Harga Modal, Harga Jual, Stok, & Kode Barcode / SKU).
+- **Manajemen Stok Barang**: Input manual atau **Batch Import via Upload File Excel (.xlsx, .xls, .csv)**.
+- **Download Template Format Excel Barang**: Unduh format template Excel resmi dengan kolom Barcode/SKU, Nama Barang, Kategori, Harga Modal, Harga Jual, & Jumlah Stok.
+- **Barcode & Foto Fleksibel**: Barcode otomatis dibuatkan sistem jika kosong di file Excel, dan foto produk dapat diunggah menyusul kapan saja melalui form edit.
 - **Auto SKU / Barcode Generator**: Pembuatan kode unik otomatis untuk barang tanpa barcode fisik.
 - **Upload Foto Produk**: Mendukung unggah foto produk dengan preview langsung yang tampil di menu kasir.
-- **Kelola Kategori Dinamis**: Tambah, edit, dan hapus kategori barang secara fleksibel.
+- **Kelola Kategori Dinamis**: Tambah, edit, dan hapus kategori barang secara fleksibel (auto-register kategori baru dari Excel).
 - **Peringatan Stok Menipis**: Notifikasi otomatis untuk stok barang <= 5 Pcs.
 - **Scan Barcode Kamera**: Integrasi kamera HP/Webcam real-time menggunakan `html5-qrcode`.
 - **Kasir & Keranjang Belanja**: Pengaturan jumlah item, kalkulasi kembalian, & opsi nominal uang pas/cepat.

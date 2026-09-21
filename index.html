@@ -224,6 +224,12 @@
               </div>
 
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn btn-secondary" id="btnDownloadProdTemplate" title="Download file format template Excel stok barang (.xlsx)">
+                  <i class="fa-solid fa-file-excel" style="color: #2563eb;"></i> Template Excel
+                </button>
+                <button class="btn btn-primary" id="btnOpenUploadExcelProduct" title="Upload data barang dari file Excel" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+                  <i class="fa-solid fa-file-arrow-up"></i> Upload Excel
+                </button>
                 <button class="btn btn-secondary" id="btnOpenManageCategories">
                   <i class="fa-solid fa-tags"></i> Kelola Kategori
                 </button>
@@ -783,6 +789,99 @@
           <button type="submit" class="btn btn-primary">Simpan Barang</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal 1C: Upload Stok Barang via File Excel -->
+  <div class="modal-overlay" id="modalUploadProductExcel">
+    <div class="modal-content modal-content-lg" style="max-width: 860px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-file-excel" style="color: #2563eb;"></i> Upload Stok Barang (Excel)</h3>
+        <button class="modal-close-btn closeModalBtn" data-modal="modalUploadProductExcel">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <!-- Step 1: Upload Dropzone & Instructions -->
+        <div class="excel-upload-container">
+          <div class="excel-dropzone excel-dropzone-pos" id="prodExcelDropzone">
+            <input type="file" id="prodExcelFileInput" accept=".xlsx, .xls, .csv" style="display: none;">
+            <div class="dropzone-icon dropzone-icon-pos">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <div class="dropzone-text">
+              <h4>Pilih atau Drag & Drop File Excel Barang di Sini</h4>
+              <p>Mendukung format <strong>.xlsx</strong>, <strong>.xls</strong>, atau <strong>.csv</strong></p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnSelectProdExcelFile" style="margin-top: 8px;">
+              <i class="fa-solid fa-folder-open"></i> Cari File di Komputer
+            </button>
+          </div>
+
+          <!-- Quick Template Download & Instruction Box -->
+          <div class="excel-info-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+              <strong style="color: var(--text-main); font-size: 0.9rem;">
+                <i class="fa-solid fa-circle-info" style="color: #2563eb;"></i> Panduan Kolom Excel Barang:
+              </strong>
+              <button type="button" class="btn btn-sm btn-secondary" id="btnDownloadProdTemplateInsideModal" style="font-size: 0.78rem; padding: 4px 10px;">
+                <i class="fa-solid fa-download" style="color: #2563eb;"></i> Unduh Template (.xlsx)
+              </button>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; line-height: 1.4;">
+              Kolom file: <strong>Nama Barang*</strong>, <strong>Harga Beli (Modal)*</strong>, <strong>Harga Jual*</strong>, <strong>Stok*</strong>, <strong>Kategori</strong>, dan <strong>Kode Barcode / SKU</strong> (opsional).
+            </p>
+            <div style="font-size: 0.76rem; color: var(--text-body); margin-bottom: 10px; background: rgba(37, 99, 235, 0.06); padding: 8px 12px; border-radius: 6px; border: 1px dashed #93c5fd;">
+              💡 <em>Catatan:</em> Jika <strong>Kode Barcode</strong> dikosongkan, sistem akan otomatis membuatkan kode SKU unik. Foto/Gambar produk dapat ditambahkan menyusul melalui tombol Edit Barang.
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="prodExcelUpdateExisting" checked style="cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent-pos);">
+              <label for="prodExcelUpdateExisting" style="font-size: 0.82rem; color: var(--text-body); cursor: pointer; user-select: none;">
+                Perbarui harga & stok jika Barcode / Nama Barang sudah ada di sistem (Update Existing)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Live Preview Table -->
+        <div id="prodExcelPreviewSection" style="display: none; margin-top: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <h4 style="margin: 0; font-size: 1rem; color: var(--text-main);">
+                <i class="fa-solid fa-list-check" style="color: var(--accent-pos);"></i> Preview Data Barang Excel
+              </h4>
+              <span id="prodExcelSummaryText" style="font-size: 0.82rem; color: var(--text-muted);">0 barang ditemukan</span>
+            </div>
+            <div style="display: flex; gap: 6px;" id="prodExcelStatBadges">
+              <!-- Badges -->
+            </div>
+          </div>
+
+          <div class="table-responsive" style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <table class="custom-table" style="margin-bottom: 0;">
+              <thead>
+                <tr>
+                  <th style="width: 45px; text-align: center;">No</th>
+                  <th>Barcode / SKU</th>
+                  <th>Nama Barang</th>
+                  <th>Kategori</th>
+                  <th>Harga Modal</th>
+                  <th>Harga Jual</th>
+                  <th>Stok</th>
+                  <th style="text-align: center;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="prodExcelPreviewTableBody">
+                <!-- Populated dynamically via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" class="btn btn-secondary closeModalBtn" data-modal="modalUploadProductExcel">Batal</button>
+        <button type="button" class="btn btn-primary" id="btnExecuteProdExcelImport" disabled style="padding: 10px 22px; font-weight: 700;">
+          <i class="fa-solid fa-file-import"></i> Simpan Data Barang
+        </button>
+      </div>
     </div>
   </div>
 

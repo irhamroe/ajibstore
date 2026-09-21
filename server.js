@@ -281,6 +281,58 @@ app.post('/api/customers', (req, res) => {
   });
 });
 
+app.post('/api/customers/batch', (req, res) => {
+  const customers = req.body.customers;
+  if (!Array.isArray(customers) || customers.length === 0) {
+    return res.status(400).json({ success: false, error: 'Daftar pelanggan tidak valid atau kosong' });
+  }
+
+  const query = `
+    INSERT INTO customers (id, name, phone, address, bandwidth, monthly_amount, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      name=excluded.name,
+      phone=excluded.phone,
+      address=excluded.address,
+      bandwidth=excluded.bandwidth,
+      monthly_amount=excluded.monthly_amount
+  `;
+
+  db.serialize(() => {
+    db.run('BEGIN TRANSACTION');
+    const stmt = db.prepare(query);
+    let hasError = false;
+
+    customers.forEach((c) => {
+      const custId = c.id || ('AJIBNET' + String(Date.now() + Math.floor(Math.random() * 1000)).slice(-5));
+      const createdDate = c.createdAt || new Date().toISOString().split('T')[0];
+      stmt.run([custId, c.name || '', c.phone || '', c.address || '', c.bandwidth || '10 Mbps', c.monthlyAmount || 0, createdDate], (err) => {
+        if (err) hasError = true;
+      });
+    });
+
+    stmt.finalize();
+
+    if (hasError) {
+      db.run('ROLLBACK', () => {
+        res.status(500).json({ success: false, error: 'Gagal memproses batch import pelanggan' });
+      });
+    } else {
+      db.run('COMMIT', (err) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        res.json({ success: true, message: `Berhasil menyimpan ${customers.length} pelanggan`, count: customers.length });
+      });
+    }
+  });
+});
+
+app.delete('/api/customers/:id', (req, res) => {
+  db.run('DELETE FROM customers WHERE id = ?', [req.params.id], function (err) {
+    if (err) return res.status(500).json({ success: false, error: err.message });
+    res.json({ success: true, message: 'Pelanggan berhasil dihapus' });
+  });
+});
+
 // Helper function to get Local LAN IP
 function getLocalIpAddresses() {
   const interfaces = os.networkInterfaces();

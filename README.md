@@ -18,9 +18,11 @@ Aplikasi Point of Sale (POS) Toko Elektronik dan Sistem Manajemen & Pembayaran W
 - **Rekap Transaksi Harian & Rentang Tanggal**: Filter rekap penjualan, omset, estimasi profit, dan jumlah transaksi per periode tanggal.
 
 ### 📶 2. Layanan Ajib.Net (Wifi Billing System)
-- **Kelola Pelanggan Wifi**: Form input pelanggan (**Nama**, **Alamat**, **Bandwidth** 10-100 Mbps, & **Nominal Pembayaran Bulanan**).
+- **Kelola Pelanggan Wifi**: Form input manual atau **Batch Import via Upload File Excel (.xlsx, .xls, .csv)**.
+- **Download Template Format Excel**: Unduh format Excel resmi siap pakai dengan kolom ID, Nama, No HP, Alamat, Bandwidth, Biaya Bulanan, & Tanggal Terdaftar.
+- **Preview & Validasi Excel Interaktif**: Drag-and-drop file Excel, deteksi cerdas baris data, status validitas data, dan opsi *Update Existing*.
 - **Bayar Wifi Bulanan**: Pilihan pelanggan -> Auto-fill paket & nominal -> Pilih periode bulan -> Cetak Kuitansi Bukti Pembayaran.
-- **Status Langganan**: Status otomatis Lunas / Belum Bayar bulan berjalan.
+- **Status Langganan & Matriks Tahunan**: Status otomatis Lunas / Belum Bayar bulan berjalan dan matriks status pembayaran 12 bulan (Jan - Des).
 - **Rekap Pembayaran Wifi**: Filter rekap iuran Wifi harian atau rentang tanggal tertentu.
 
 ### 🔄 3. Database Terpusat SQLite & Sinkronisasi Multi-Device

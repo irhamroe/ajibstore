@@ -312,6 +312,17 @@
       } catch (e) { console.error('API saveCustomer error:', e); }
     },
 
+    async batchSaveCustomers(customers) {
+      if (!this.isServer && !getApiBaseUrl()) return;
+      try {
+        await fetch(`${getApiBaseUrl()}/api/customers/batch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customers })
+        });
+      } catch (e) { console.error('API batchSaveCustomers error:', e); }
+    },
+
     async deleteCustomer(id) {
       if (!this.isServer && !getApiBaseUrl()) return;
       try {
@@ -2877,7 +2888,458 @@
   // ==========================================
   // 7. Pelanggan Wifi Ajib.Net Management
   // ==========================================
+  let parsedExcelCustomers = [];
+
+  function downloadCustomerExcelTemplate() {
+    if (typeof XLSX === 'undefined') {
+      showToast('Library Excel (SheetJS) belum termuat. Periksa koneksi internet!', 'error');
+      return;
+    }
+
+    try {
+      const templateData = [
+        {
+          'ID Pelanggan': 'AJIBNET005',
+          'Nama Pelanggan': 'Santoso Joko',
+          'No HP / WhatsApp': '081234567891',
+          'Alamat': 'Jl. Kenanga No. 15 RT 02/03',
+          'Paket Bandwidth': '20 Mbps',
+          'Biaya Bulanan': 150000,
+          'Tanggal Terdaftar': '2026-05-01'
+        },
+        {
+          'ID Pelanggan': 'AJIBNET006',
+          'Nama Pelanggan': 'Dewi Lestari',
+          'No HP / WhatsApp': '085711223344',
+          'Alamat': 'Dusun Melati RT 01/01',
+          'Paket Bandwidth': '30 Mbps',
+          'Biaya Bulanan': 200000,
+          'Tanggal Terdaftar': '2026-05-01'
+        },
+        {
+          'ID Pelanggan': '',
+          'Nama Pelanggan': 'Warung Bu Sri',
+          'No HP / WhatsApp': '087812345678',
+          'Alamat': 'Pasar Pon Blok B No. 4',
+          'Paket Bandwidth': '10 Mbps',
+          'Biaya Bulanan': 100000,
+          'Tanggal Terdaftar': ''
+        }
+      ];
+
+      const ws = XLSX.utils.json_to_sheet(templateData);
+
+      // Set optimal column widths
+      ws['!cols'] = [
+        { wch: 16 }, // ID Pelanggan
+        { wch: 28 }, // Nama Pelanggan
+        { wch: 20 }, // No HP
+        { wch: 35 }, // Alamat
+        { wch: 18 }, // Paket Bandwidth
+        { wch: 16 }, // Biaya Bulanan
+        { wch: 18 }  // Tanggal Terdaftar
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Pelanggan_Wifi');
+      XLSX.writeFile(wb, 'Template_Pelanggan_AjibNet.xlsx');
+      showToast('Template Excel berhasil diunduh!', 'success');
+    } catch (err) {
+      console.error('Error generating Excel template:', err);
+      showToast('Gagal mengunduh template: ' + err.message, 'error');
+    }
+  }
+
+  function initCustomerExcelImport() {
+    // 1. Trigger Download Template
+    const btnDownload = document.getElementById('btnDownloadCustTemplate');
+    if (btnDownload) {
+      btnDownload.addEventListener('click', downloadCustomerExcelTemplate);
+    }
+    const btnDownloadInside = document.getElementById('btnDownloadTemplateInsideModal');
+    if (btnDownloadInside) {
+      btnDownloadInside.addEventListener('click', downloadCustomerExcelTemplate);
+    }
+
+    // 2. Open Modal Upload
+    const btnOpenUpload = document.getElementById('btnOpenUploadExcelCustomer');
+    if (btnOpenUpload) {
+      btnOpenUpload.addEventListener('click', () => {
+        resetCustomerExcelUploadModal();
+        openModal('modalUploadCustomerExcel');
+      });
+    }
+
+    // 3. File Input & Select Button
+    const fileInput = document.getElementById('custExcelFileInput');
+    const btnSelectFile = document.getElementById('btnSelectExcelFile');
+    const dropzone = document.getElementById('custExcelDropzone');
+
+    if (btnSelectFile && fileInput) {
+      btnSelectFile.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.value = '';
+        fileInput.click();
+      });
+    }
+
+    if (dropzone && fileInput) {
+      dropzone.addEventListener('click', () => {
+        fileInput.value = '';
+        fileInput.click();
+      });
+
+      // Drag & Drop handlers
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('drag-over');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('drag-over');
+        });
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+          handleCustomerExcelFile(files[0]);
+        }
+      });
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          handleCustomerExcelFile(e.target.files[0]);
+        }
+      });
+    }
+
+    // 4. Confirm Import Button
+    const btnExecute = document.getElementById('btnExecuteCustExcelImport');
+    if (btnExecute) {
+      btnExecute.addEventListener('click', executeCustomerExcelImport);
+    }
+  }
+
+  function resetCustomerExcelUploadModal() {
+    parsedExcelCustomers = [];
+    const fileInput = document.getElementById('custExcelFileInput');
+    if (fileInput) fileInput.value = '';
+
+    const previewSection = document.getElementById('custExcelPreviewSection');
+    if (previewSection) previewSection.style.display = 'none';
+
+    const tbody = document.getElementById('custExcelPreviewTableBody');
+    if (tbody) tbody.innerHTML = '';
+
+    const btnExecute = document.getElementById('btnExecuteCustExcelImport');
+    if (btnExecute) {
+      btnExecute.disabled = true;
+      btnExecute.innerHTML = '<i class="fa-solid fa-file-import"></i> Simpan Data Pelanggan';
+    }
+
+    const statBadges = document.getElementById('custExcelStatBadges');
+    if (statBadges) statBadges.innerHTML = '';
+  }
+
+  function handleCustomerExcelFile(file) {
+    if (!file) return;
+
+    const validExtensions = ['.xlsx', '.xls', '.csv'];
+    const fileName = file.name.toLowerCase();
+    const isValidExt = validExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!isValidExt) {
+      showToast('Format file tidak didukung! Harap gunakan file .xlsx, .xls, atau .csv', 'error');
+      return;
+    }
+
+    if (typeof XLSX === 'undefined') {
+      showToast('Library Excel belum siap. Periksa koneksi internet Anda!', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: false });
+
+        if (!rawJson || rawJson.length === 0) {
+          showToast('File Excel kosong atau tidak memiliki baris data!', 'warning');
+          return;
+        }
+
+        parseExcelCustomerRows(rawJson);
+      } catch (err) {
+        console.error('Error reading Excel file:', err);
+        showToast('Gagal membaca file Excel: ' + err.message, 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function parseExcelCustomerRows(rows) {
+    parsedExcelCustomers = [];
+
+    rows.forEach((row, index) => {
+      // Find matching column keys dynamically with normalized names
+      const rowKeys = Object.keys(row);
+      const getVal = (possibleKeywords) => {
+        const key = rowKeys.find(k => {
+          const norm = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return possibleKeywords.some(kw => norm.includes(kw));
+        });
+        return key ? String(row[key]).trim() : '';
+      };
+
+      const rawId = getVal(['idpelanggan', 'idcust', 'customerid', 'custid', 'id', 'kode']);
+      const name = getVal(['namapelanggan', 'namalengkap', 'customername', 'customer', 'nama', 'name']);
+      const phone = getVal(['nohp', 'nomorhp', 'hp', 'telepon', 'phone', 'whatsapp', 'wa', 'notelp', 'kontak']);
+      const address = getVal(['alamat', 'address', 'lokasi', 'domisili', 'rumah']) || '-';
+      let bandwidth = getVal(['paketbandwidth', 'bandwidth', 'paket', 'kecepatan', 'speed', 'paketinternet']) || '10 Mbps';
+      const rawAmount = getVal(['biayabulanan', 'biaya', 'tarif', 'nominal', 'harga', 'monthlyamount', 'iuran', 'amount']);
+      let createdAt = getVal(['tanggalterdaftar', 'tanggaldaftar', 'tanggal', 'tgl', 'createdat', 'created']);
+
+      // Normalize Bandwidth string (e.g. "20" -> "20 Mbps")
+      if (/^\d+$/.test(bandwidth)) {
+        bandwidth = `${bandwidth} Mbps`;
+      } else if (/^\d+\s*mb$/i.test(bandwidth)) {
+        bandwidth = bandwidth.replace(/mb$/i, 'Mbps');
+      }
+
+      // Clean Numeric Amount (remove Rp, dots, commas, spaces)
+      let monthlyAmount = 0;
+      if (rawAmount) {
+        const cleanedStr = rawAmount.replace(/[^0-9]/g, '');
+        monthlyAmount = parseFloat(cleanedStr) || 0;
+      }
+
+      // If monthly amount is still 0, infer standard fee by bandwidth if possible
+      if (monthlyAmount === 0) {
+        const bwNum = parseInt(bandwidth);
+        if (bwNum === 5) monthlyAmount = 75000;
+        else if (bwNum === 10) monthlyAmount = 100000;
+        else if (bwNum === 20) monthlyAmount = 150000;
+        else if (bwNum === 30) monthlyAmount = 200000;
+        else if (bwNum === 50) monthlyAmount = 300000;
+        else if (bwNum === 100) monthlyAmount = 500000;
+        else monthlyAmount = 150000;
+      }
+
+      // Date normalization
+      if (!createdAt || isNaN(Date.parse(createdAt))) {
+        createdAt = formatDateIso(new Date());
+      } else {
+        try {
+          const d = new Date(createdAt);
+          createdAt = formatDateIso(d);
+        } catch (e) {
+          createdAt = formatDateIso(new Date());
+        }
+      }
+
+      // Validation
+      const isValid = Boolean(name && name.length >= 2);
+      const isExisting = Boolean(rawId && state.customers.some(c => c.id.toLowerCase() === rawId.toLowerCase())) ||
+                        state.customers.some(c => c.name.toLowerCase() === name.toLowerCase());
+
+      parsedExcelCustomers.push({
+        rowNumber: index + 1,
+        id: rawId,
+        name: name,
+        phone: phone,
+        address: address,
+        bandwidth: bandwidth,
+        monthlyAmount: monthlyAmount,
+        createdAt: createdAt,
+        isValid: isValid,
+        isExisting: isExisting
+      });
+    });
+
+    renderExcelPreview();
+  }
+
+  function renderExcelPreview() {
+    const previewSection = document.getElementById('custExcelPreviewSection');
+    const tbody = document.getElementById('custExcelPreviewTableBody');
+    const summaryText = document.getElementById('custExcelSummaryText');
+    const statBadges = document.getElementById('custExcelStatBadges');
+    const btnExecute = document.getElementById('btnExecuteCustExcelImport');
+
+    if (!previewSection || !tbody) return;
+
+    previewSection.style.display = 'block';
+
+    const totalRows = parsedExcelCustomers.length;
+    const validRows = parsedExcelCustomers.filter(r => r.isValid).length;
+    const invalidRows = totalRows - validRows;
+    const existingRows = parsedExcelCustomers.filter(r => r.isValid && r.isExisting).length;
+    const newRows = validRows - existingRows;
+
+    if (summaryText) {
+      summaryText.textContent = `Total: ${totalRows} baris data terdeteksi`;
+    }
+
+    if (statBadges) {
+      statBadges.innerHTML = `
+        <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> ${newRows} Pelanggan Baru</span>
+        ${existingRows > 0 ? `<span class="badge badge-info"><i class="fa-solid fa-arrows-rotate"></i> ${existingRows} Sudah Terdaftar</span>` : ''}
+        ${invalidRows > 0 ? `<span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation"></i> ${invalidRows} Tidak Valid</span>` : ''}
+      `;
+    }
+
+    if (btnExecute) {
+      btnExecute.disabled = validRows === 0;
+      btnExecute.innerHTML = `<i class="fa-solid fa-file-import"></i> Simpan ${validRows} Pelanggan`;
+    }
+
+    tbody.innerHTML = parsedExcelCustomers.map(r => {
+      let statusBadge = '';
+      let rowClass = 'preview-row-valid';
+
+      if (!r.isValid) {
+        rowClass = 'preview-row-error';
+        statusBadge = '<span class="badge badge-danger">Nama Kosong</span>';
+      } else if (r.isExisting) {
+        rowClass = 'preview-row-warning';
+        statusBadge = '<span class="badge badge-info"><i class="fa-solid fa-pen"></i> Update</span>';
+      } else {
+        statusBadge = '<span class="badge badge-success"><i class="fa-solid fa-plus"></i> Baru</span>';
+      }
+
+      const displayId = r.id || '<em style="color: var(--text-dim);">Otomatis</em>';
+
+      return `
+        <tr class="${rowClass}">
+          <td style="text-align: center; color: var(--text-muted); font-size: 0.8rem;">${r.rowNumber}</td>
+          <td style="font-family: monospace; font-weight: 600; color: #10b981;">${displayId}</td>
+          <td style="font-weight: 600;">${r.name || '<em style="color:#ef4444;">(Tidak ada nama)</em>'}</td>
+          <td>${r.phone || '-'}</td>
+          <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.address}">${r.address}</td>
+          <td><span class="badge badge-info">${r.bandwidth}</span></td>
+          <td style="font-weight: 700; color: #38bdf8;">${formatRupiah(r.monthlyAmount)}</td>
+          <td style="text-align: center;">${statusBadge}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function executeCustomerExcelImport() {
+    const validRecords = parsedExcelCustomers.filter(r => r.isValid);
+    if (validRecords.length === 0) {
+      showToast('Tidak ada data pelanggan yang valid untuk diimpor!', 'error');
+      return;
+    }
+
+    const updateExisting = document.getElementById('custExcelUpdateExisting')?.checked ?? true;
+    let addedCount = 0;
+    let updatedCount = 0;
+    const customersToBatch = [];
+
+    // Base sequence for generating IDs
+    let maxIdNum = 0;
+    state.customers.forEach(c => {
+      const match = c.id.match(/AJIBNET(\d+)/i);
+      if (match) {
+        const num = parseInt(match[1]);
+        if (num > maxIdNum) maxIdNum = num;
+      }
+    });
+
+    validRecords.forEach(r => {
+      let targetId = r.id;
+      if (!targetId) {
+        maxIdNum++;
+        targetId = 'AJIBNET' + String(maxIdNum).padStart(3, '0');
+      }
+
+      // Check if existing by ID or Name
+      let existingIndex = state.customers.findIndex(c => c.id.toLowerCase() === targetId.toLowerCase());
+      if (existingIndex === -1) {
+        existingIndex = state.customers.findIndex(c => c.name.toLowerCase() === r.name.toLowerCase());
+      }
+
+      if (existingIndex >= 0) {
+        if (updateExisting) {
+          const oldCust = state.customers[existingIndex];
+          const updatedCust = {
+            id: oldCust.id,
+            name: r.name,
+            phone: r.phone || oldCust.phone || '',
+            address: r.address || oldCust.address || '-',
+            bandwidth: r.bandwidth || oldCust.bandwidth,
+            monthlyAmount: r.monthlyAmount || oldCust.monthlyAmount,
+            createdAt: oldCust.createdAt || r.createdAt
+          };
+          state.customers[existingIndex] = updatedCust;
+          customersToBatch.push(updatedCust);
+          updatedCount++;
+        }
+      } else {
+        const newCust = {
+          id: targetId,
+          name: r.name,
+          phone: r.phone || '',
+          address: r.address || '-',
+          bandwidth: r.bandwidth || '10 Mbps',
+          monthlyAmount: r.monthlyAmount || 100000,
+          createdAt: r.createdAt || formatDateIso(new Date())
+        };
+        state.customers.push(newCust);
+        customersToBatch.push(newCust);
+        addedCount++;
+      }
+    });
+
+    // 1. Save to LocalStorage
+    saveData(STORAGE_KEYS.CUSTOMERS);
+
+    // 2. Push to Firebase Cloud
+    pushToFirebase();
+
+    // 3. Save to SQLite Backend via Batch API
+    API.batchSaveCustomers(customersToBatch);
+
+    // 4. Re-render affected views
+    paginationState.wifiCustomers.page = 1;
+    renderWifiCustomers();
+    renderBayarWifiForm();
+    renderRekapPembayaranWifi();
+    renderDashboard();
+
+    // 5. Close Modal & Notification
+    closeModal('modalUploadCustomerExcel');
+
+    const totalProcessed = addedCount + updatedCount;
+    let msg = `Berhasil memproses ${totalProcessed} pelanggan WiFi!`;
+    if (addedCount > 0 && updatedCount > 0) {
+      msg = `Berhasil menambahkan ${addedCount} pelanggan baru dan memperbarui ${updatedCount} data pelanggan!`;
+    } else if (addedCount > 0) {
+      msg = `Berhasil menambahkan ${addedCount} pelanggan baru!`;
+    } else if (updatedCount > 0) {
+      msg = `Berhasil memperbarui ${updatedCount} data pelanggan!`;
+    }
+
+    showToast(msg, 'success', 4500);
+  }
+
   function initWifiCustomers() {
+    initCustomerExcelImport();
+
     document.getElementById('btnOpenAddCustomer').addEventListener('click', () => {
       document.getElementById('formCustomer').reset();
       document.getElementById('custId').value = '';
@@ -2911,6 +3373,8 @@
       API.saveCustomer(custObj);
       closeModal('modalCustomer');
       renderWifiCustomers();
+      renderBayarWifiForm();
+      renderRekapPembayaranWifi();
     });
 
     document.getElementById('searchWifiCustomer').addEventListener('input', () => {

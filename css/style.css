@@ -2271,5 +2271,95 @@ body {
   }
 }
 
+/* ==========================================================================
+   Excel Import / Upload Component Styles
+   ========================================================================== */
+.excel-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.excel-dropzone {
+  border: 2px dashed #10b981;
+  background: #f0fdf4;
+  border-radius: var(--radius-lg);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.excel-dropzone:hover,
+.excel-dropzone.drag-over {
+  background: #dcfce7;
+  border-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.2);
+}
+
+.excel-dropzone.drag-over .dropzone-icon {
+  transform: scale(1.15);
+}
+
+.dropzone-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: var(--transition-fast);
+}
+
+.dropzone-text h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.dropzone-text p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.excel-info-card {
+  background: var(--bg-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+
+.preview-row-valid {
+  background-color: transparent;
+}
+
+.preview-row-warning {
+  background-color: rgba(245, 158, 11, 0.08) !important;
+}
+
+.preview-row-error {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+@media (min-width: 640px) {
+  .modal-content-lg {
+    width: 90%;
+    max-width: 840px;
+  }
+}
+
+
 
 
